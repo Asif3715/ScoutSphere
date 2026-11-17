@@ -16,6 +16,14 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # Auth. jwt_secret MUST be overridden outside local/test (enforced in security.py).
+    jwt_secret: str = "dev-only-insecure-secret-change-me"
+    jwt_algorithm: str = "HS256"
+    access_token_minutes: int = 15
+    refresh_token_days: int = 14
+    refresh_cookie_name: str = "refresh_token"
+    cookie_secure: bool = False  # True behind HTTPS in staging/production
+
     @property
     def sync_database_url(self) -> str:
         """Sync URL used by Alembic."""
