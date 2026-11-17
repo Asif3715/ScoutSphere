@@ -37,6 +37,13 @@ cd frontend && pnpm lint && pnpm typecheck && pnpm test
 
 Backend tests need the compose Postgres and Redis running.
 
+## Create a platform admin (for platform endpoints)
+
+```bash
+cd backend && uv run python -m app.cli create-platform-admin you@example.com "Your Name"
+```
+The password is prompted for, never passed on the command line.
+
 ## Migrations
 
 ```bash

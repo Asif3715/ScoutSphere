@@ -34,6 +34,8 @@ type AuthState = {
   login: (email: string, password: string) => Promise<void>;
   register: (v: RegisterValues) => Promise<void>;
   logout: () => Promise<void>;
+  /** Reloads user + memberships (after creating an org or accepting an invitation). */
+  refreshProfile: (preferOrgId?: string) => Promise<void>;
   selectOrg: (id: string | null) => void;
   can: (permission: string) => boolean;
 };
@@ -55,21 +57,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
-  const loadProfile = useCallback(async () => {
-    const me = await apiFetch<{ user: User; memberships: Membership[] }>(
-      "/auth/me",
-    );
-    setUser(me.user);
-    setMemberships(me.memberships);
-    let saved: string | null = null;
-    try {
-      saved = sessionStorage.getItem("activeOrg");
-    } catch {}
-    const valid = me.memberships.find((m) => m.organization_id === saved)
-      ? saved
-      : (me.memberships[0]?.organization_id ?? null);
-    selectOrg(valid);
-  }, [selectOrg]);
+  const loadProfile = useCallback(
+    async (preferOrgId?: string) => {
+      const me = await apiFetch<{ user: User; memberships: Membership[] }>(
+        "/auth/me",
+      );
+      setUser(me.user);
+      setMemberships(me.memberships);
+      let saved: string | null = null;
+      try {
+        saved = sessionStorage.getItem("activeOrg");
+      } catch {}
+      const pick = (id: string | null | undefined) =>
+        me.memberships.find((m) => m.organization_id === id) ? id! : null;
+      const valid =
+        pick(preferOrgId) ??
+        pick(saved) ??
+        me.memberships[0]?.organization_id ??
+        null;
+      selectOrg(valid);
+    },
+    [selectOrg],
+  );
 
   // On first load, try to restore the session from the refresh cookie.
   useEffect(() => {
@@ -142,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       register,
       logout,
+      refreshProfile: loadProfile,
       selectOrg,
       can,
     }),
@@ -153,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       register,
       logout,
+      loadProfile,
       selectOrg,
       can,
     ],

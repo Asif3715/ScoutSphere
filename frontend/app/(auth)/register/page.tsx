@@ -2,18 +2,20 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { AuthCard, Field } from "@/components/auth/field";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/http";
+import { safeNext } from "@/lib/redirect";
 import { registerSchema, type RegisterValues } from "@/lib/schemas";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { register: registerUser } = useAuth();
   const router = useRouter();
+  const next = safeNext(useSearchParams().get("next"));
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
@@ -29,7 +31,7 @@ export default function RegisterPage() {
     setFormError(null);
     try {
       await registerUser(values);
-      router.replace("/dashboard");
+      router.replace(next);
     } catch (e) {
       if (e instanceof ApiError && e.code === "email_taken") {
         setError("email", { message: e.message });
@@ -100,10 +102,21 @@ export default function RegisterPage() {
       </form>
       <p className="mt-4 text-sm">
         Already registered?{" "}
-        <Link href="/login" className="text-teal-600 underline">
+        <Link
+          href={`/login${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`}
+          className="text-teal-600 underline"
+        >
           Sign in
         </Link>
       </p>
     </AuthCard>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }

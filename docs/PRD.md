@@ -27,6 +27,8 @@ This section was added after reviewing the original blueprint. Where it conflict
 - Permissions are code-defined string constants (e.g. `players:read`, `reports:approve`); roles are seeded database rows mapping to those permissions. Authorization is checked in the service layer through a single `AuthContext` object (user, active organization, role, permissions) that is also what the AI agent receives.
 - The active organization is chosen per request via a header/claim and re-validated against membership on every request. Platform Support has **no** default access to club-private data; access requires an explicit, time-limited, audited grant.
 
+- **Organization creation:** any individual `standard` account can found an organization and becomes its Club Owner (Phase 2 decision). Player and agent accounts join organizations by invitation only. Platform admins can suspend or reactivate any organization.
+
 ## 0.3 Authentication details
 
 - Argon2id password hashing. Short-lived access JWT (about 15 min) plus rotating, revocable refresh tokens stored hashed in `user_sessions`. Refresh token in an `httpOnly`, `Secure`, `SameSite` cookie; access token held in memory by the frontend.

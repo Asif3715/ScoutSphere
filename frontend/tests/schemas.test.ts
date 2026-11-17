@@ -50,3 +50,69 @@ describe("registerSchema", () => {
     ).toBe(false);
   });
 });
+
+import {
+  clubPayload,
+  clubSchema,
+  inviteSchema,
+  organizationSchema,
+} from "@/lib/schemas";
+
+describe("organizationSchema", () => {
+  it("requires a name of at least 2 chars", () => {
+    expect(organizationSchema.safeParse({ name: "A" }).success).toBe(false);
+    expect(organizationSchema.safeParse({ name: "Alpha FC" }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe("clubSchema / clubPayload", () => {
+  it("validates year and email", () => {
+    expect(
+      clubSchema.safeParse({ name: "X", founded_year: "1500" }).success,
+    ).toBe(false);
+    expect(
+      clubSchema.safeParse({ name: "X", founded_year: "19x4" }).success,
+    ).toBe(false);
+    expect(
+      clubSchema.safeParse({ name: "X", contact_email: "bad" }).success,
+    ).toBe(false);
+    expect(
+      clubSchema.safeParse({
+        name: "X",
+        founded_year: "1904",
+        contact_email: "a@b.co",
+      }).success,
+    ).toBe(true);
+    expect(clubSchema.safeParse({ name: "" }).success).toBe(false);
+  });
+  it("converts blanks to null and the year to a number", () => {
+    const p = clubPayload({
+      name: " Alpha ",
+      city: "",
+      country: "UK",
+      founded_year: "1904",
+    });
+    expect(p).toMatchObject({
+      name: "Alpha",
+      city: null,
+      country: "UK",
+      founded_year: 1904,
+    });
+    expect(
+      clubPayload({ name: "B", founded_year: "" }).founded_year,
+    ).toBeNull();
+  });
+});
+
+describe("inviteSchema", () => {
+  it("accepts organization roles only", () => {
+    expect(
+      inviteSchema.safeParse({ email: "a@b.co", role: "scout" }).success,
+    ).toBe(true);
+    expect(
+      inviteSchema.safeParse({ email: "a@b.co", role: "super_admin" }).success,
+    ).toBe(false);
+  });
+});
