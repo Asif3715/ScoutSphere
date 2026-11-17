@@ -1,0 +1,30 @@
+# Database schema design
+
+Conventions: UUID PKs, `timestamptz` (UTC), `created_at`/`updated_at`, explicit FKs and indexes, money as integer minor units + ISO currency, JSONB only for genuinely flexible attributes. Tables are introduced by the migration of the phase that needs them. Extensions enabled in baseline: `pgcrypto`, `pg_trgm`, `citext`.
+
+## Tenancy rule
+Tables marked **[org]** carry `organization_id` (NOT NULL, indexed, FK). **[global]** tables are not tenant-owned. **[mixed]** tables are global entities with a visibility field plus org-owned overlay tables.
+
+## Entities by phase
+
+| Phase | Tables |
+|---|---|
+| 1 Identity | users (citext email), user_sessions (hashed refresh tokens), roles, permissions, role_permissions, organization_members [org], invitations [org], audit_logs |
+| 2 Orgs/clubs | organizations, clubs [mixed: `organization_id` NULL = reference club], club_settings [org] |
+| 3 Players | players [mixed: visibility enum], player_positions, player_career_history, player_statistics, player_media, player_documents, player_availability (restricted), teams [org], team_players [org], player_claims |
+| 4 Scouts/matches | scout_profiles [org], scout_specializations, competitions, competition_seasons, competition_participants, matches, match_events, match_statistics |
+| 5 Assignments/reports | scout_assignments [org], assignment_history [org], scouting_reports [org], scouting_report_ratings, scouting_report_versions, scouting_report_reviews, notifications |
+| 6 Recruitment | recruitment_requirements [org], recruitment_candidates [org], shortlists [org], shortlist_players, recruitment_stage_history [org] |
+| 7-8 Agent | conversations, conversation_messages, agent_executions, agent_approvals (args hash, expiry), idempotency_keys |
+| 9 Trials | trials [org], trial_participants, trial_evaluations |
+| 10 Contracts | contracts [org], transfers [org], transfer_proposals, negotiations, agents, player_representatives |
+| 11 RAG | uploaded_files [org], document_chunks_metadata [org] (vectors in Qdrant) |
+
+## Key relationships
+- `clubs.organization_id` nullable: managed vs reference club.
+- `player_career_history` links global `players` to `clubs` (any kind) with date ranges (CHECK start <= end; no overlapping full-time spells enforced in service).
+- `team_players` links `players` to org-owned `teams`; moving club never duplicates a player.
+- `scouting_reports` (subjective, org-private) are separate from `player_statistics` / `match_statistics` (objective).
+- Status machines (assignments, reports, recruitment stages) use enum/check constraints plus append-only history tables.
+
+Detailed column definitions are written with each phase's models and kept here in sync.
