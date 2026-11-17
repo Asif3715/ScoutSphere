@@ -87,7 +87,8 @@ def _clean_tables():
     )
     conn.autocommit = True
     conn.cursor().execute(
-        "TRUNCATE audit_logs, user_sessions, organization_members, organizations, users CASCADE"
+        "TRUNCATE audit_logs, user_sessions, invitations, clubs, organization_members,"
+        " organizations, users CASCADE"
     )
     conn.close()
 
@@ -143,3 +144,9 @@ def bearer(token: str, org: Organization | None = None) -> dict:
     if org is not None:
         h["X-Organization-Id"] = str(org.id)
     return h
+
+
+def hdr(token: str, org_id) -> dict:
+    """Auth headers for an organization given as an id (str/UUID) or a dict from the API."""
+    org_id = org_id["id"] if isinstance(org_id, dict) else org_id
+    return {"Authorization": f"Bearer {token}", "X-Organization-Id": str(org_id)}

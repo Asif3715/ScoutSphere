@@ -1,12 +1,16 @@
 """Import every model module here so Alembic autogenerate sees it."""
 
 from app.models.audit import AuditLog
+from app.models.club import Club
+from app.models.invitation import Invitation
 from app.models.organization import Organization, OrganizationMember
 from app.models.rbac import Permission, Role, RolePermission
 from app.models.user import User, UserSession
 
 __all__ = [
     "AuditLog",
+    "Club",
+    "Invitation",
     "Organization",
     "OrganizationMember",
     "Permission",
