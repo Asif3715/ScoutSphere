@@ -102,10 +102,13 @@ async def test_expired_token_rejected(client):
     user = await make_user("a@example.com")
     s = get_settings()
     now = datetime.now(UTC)
-    expired = jwt.encode(
-        {"sub": str(user.id), "type": "access", "iat": now - timedelta(hours=2), "exp": now - timedelta(hours=1)},
-        s.jwt_secret, algorithm=s.jwt_algorithm,
-    )  # fmt: skip
+    claims = {
+        "sub": str(user.id),
+        "type": "access",
+        "iat": now - timedelta(hours=2),
+        "exp": now - timedelta(hours=1),
+    }
+    expired = jwt.encode(claims, s.jwt_secret, algorithm=s.jwt_algorithm)
     r = await client.get("/api/v1/auth/me", headers=bearer(expired))
     assert r.status_code == 401
 

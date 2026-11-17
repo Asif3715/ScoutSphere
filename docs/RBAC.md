@@ -33,4 +33,4 @@ Platform: `super_admin` manages organizations, platform users, audit logs and ag
 3. Ownership checks (e.g. a scout's own reports) are separate from role permissions.
 4. Sensitive actions write to `audit_logs`.
 
-The exact permission list is finalized when Phase 1 begins.
+The authoritative permission list and role mapping is `backend/app/permissions/catalog.py` (28 permissions, 7 roles as of Phase 1). Tests assert platform and organization permissions never overlap and that Platform Support holds no organization permission.

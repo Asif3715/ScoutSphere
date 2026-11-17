@@ -33,3 +33,12 @@ Browser -> Next.js (3000) -> FastAPI /api/v1 (8000) -> PostgreSQL (SQLAlchemy 2 
 - **Host ports** 5433/6380 avoid clashes with local Postgres/Redis; services bind to 127.0.0.1 only.
 - **Infrastructure on demand:** Celery, Qdrant, object storage and WebSockets are not present until a phase needs them.
 - **Frontend** uses the Next.js App Router with Tailwind; shadcn/ui, TanStack Query and form libraries are added in Phase 1 with the first real screens.
+
+## Phase 1: identity and authorization
+
+- Tables: `users` (citext email), `user_sessions` (hashed rotating refresh tokens, token families), `roles`, `permissions`, `role_permissions`, `organizations`, `organization_members`, `audit_logs`.
+- Argon2id password hashing; unknown-email logins still run one hash verification to avoid a timing oracle.
+- Backend permission checks use the code catalog; the DB tables mirror it for admin/reporting use.
+- Frontend keeps the access token in memory only and restores sessions from the refresh cookie on load. Route guards are UX; the backend is the enforcement point.
+- Tests run against a throwaway `scoutsphere_test` database created from the Alembic migrations, so migrations are exercised on every run.
+- Not yet done (planned): rate limiting on login, password recovery, email verification, invitations (Phase 2).

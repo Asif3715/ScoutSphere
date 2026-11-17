@@ -11,12 +11,12 @@ os.environ["DATABASE_URL"] = (
 
 import psycopg2  # noqa: E402
 import pytest  # noqa: E402
-from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
 from fastapi import APIRouter, Depends  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
 from sqlalchemy import select  # noqa: E402
 
+from alembic import command  # noqa: E402
 from app.api.deps import require_permission  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
