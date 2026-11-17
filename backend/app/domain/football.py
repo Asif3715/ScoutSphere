@@ -55,3 +55,18 @@ def dob_bounds_for_age(
     if min_age is not None:  # age >= min  <=>  dob <= today - min years
         latest = shift(min_age)
     return earliest, latest
+
+
+AGE_GROUPS = ["u15", "u16", "u17", "u18", "u19", "u21", "u23", "senior"]
+SPECIALIZATION_KINDS = ["position", "age_group", "region"]
+COMPETITION_TYPES = ["league", "cup", "friendly", "youth_league", "international", "other"]
+MATCH_STATUSES = ["scheduled", "live", "finished", "postponed", "cancelled"]
+EVENT_TYPES = ["goal", "own_goal", "penalty", "yellow_card", "red_card", "substitution"]
+# status -> statuses it may move to (same-status edits are always allowed)
+MATCH_TRANSITIONS: dict[str, set[str]] = {
+    "scheduled": {"live", "finished", "postponed", "cancelled"},
+    "live": {"finished", "cancelled"},
+    "finished": set(),
+    "postponed": {"scheduled", "cancelled"},
+    "cancelled": {"scheduled"},
+}

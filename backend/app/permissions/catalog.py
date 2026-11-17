@@ -12,6 +12,10 @@ MEMBERS_READ = "members:read"
 MEMBERS_MANAGE = "members:manage"  # invite / remove / change roles
 CLUBS_READ = "clubs:read"
 CLUBS_MANAGE = "clubs:manage"
+SCOUTS_READ = "scouts:read"
+SCOUTS_MANAGE = "scouts:manage"  # create/edit any scout profile
+MATCHES_READ = "matches:read"  # competitions, seasons, matches
+MATCHES_MANAGE = "matches:manage"
 PLAYERS_READ = "players:read"
 PLAYERS_WRITE = "players:write"
 PLAYERS_MEDICAL_READ = "players:medical_read"
@@ -39,6 +43,10 @@ PLATFORM_SUPPORT_VIEW = "platform:support_view"
 
 ALL_ORG_PERMISSIONS = [
     ORG_READ, ORG_UPDATE, MEMBERS_READ, MEMBERS_MANAGE, CLUBS_READ, CLUBS_MANAGE,
+    SCOUTS_READ,
+    SCOUTS_MANAGE,
+    MATCHES_READ,
+    MATCHES_MANAGE,
     PLAYERS_READ, PLAYERS_WRITE, PLAYERS_MEDICAL_READ, ASSIGNMENTS_READ, ASSIGNMENTS_MANAGE,
     REPORTS_READ, REPORTS_WRITE, REPORTS_REVIEW, RECRUITMENT_READ, RECRUITMENT_MANAGE,
     TRIALS_READ, TRIALS_MANAGE, TRIALS_EVALUATE, CONTRACTS_READ, CONTRACTS_MANAGE,
@@ -66,6 +74,8 @@ ROLES: dict[str, tuple[str, str, list[str]]] = {
         "organization",
         [
             ORG_READ,
+            SCOUTS_READ,
+            MATCHES_READ,
             MEMBERS_READ,
             CLUBS_READ,
             PLAYERS_READ,
@@ -89,6 +99,8 @@ ROLES: dict[str, tuple[str, str, list[str]]] = {
         "organization",
         [
             ORG_READ,
+            SCOUTS_READ,
+            MATCHES_READ,
             CLUBS_READ,
             PLAYERS_READ,
             ASSIGNMENTS_READ,
@@ -104,6 +116,7 @@ ROLES: dict[str, tuple[str, str, list[str]]] = {
         "organization",
         [
             ORG_READ,
+            MATCHES_READ,
             CLUBS_READ,
             PLAYERS_READ,
             PLAYERS_MEDICAL_READ,
