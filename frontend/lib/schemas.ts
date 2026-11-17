@@ -87,3 +87,104 @@ export const inviteSchema = z.object({
   ]),
 });
 export type InviteValues = z.infer<typeof inviteSchema>;
+
+// ---- players & teams ------------------------------------------------------------------
+const numStr = (label: string, min: number, max: number) =>
+  z
+    .string()
+    .trim()
+    .refine(
+      (v) => v === "" || (/^\d+$/.test(v) && +v >= min && +v <= max),
+      `${label} must be ${min}-${max}`,
+    )
+    .optional();
+
+export const playerSchema = z.object({
+  full_name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(200),
+  date_of_birth: z
+    .string()
+    .min(1, "Date of birth is required")
+    .refine(
+      (v) => !Number.isNaN(Date.parse(v)) && new Date(v) < new Date(),
+      "Must be a past date",
+    ),
+  nationality: z.string().trim().max(100).optional(),
+  height_cm: numStr("Height", 120, 230),
+  weight_kg: numStr("Weight", 30, 160),
+  preferred_foot: z.enum(["", "left", "right", "both"]).optional(),
+  primary_position: z.string().optional(),
+  secondary_positions: z
+    .array(z.string())
+    .max(4, "At most 4 secondary positions")
+    .optional(),
+  visibility: z.enum(["private", "network", "public"]),
+  profile_picture_url: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v === "" || /^https?:\/\/\S+$/i.test(v),
+      "Must start with http:// or https://",
+    )
+    .optional(),
+  biography: z.string().max(5000).optional(),
+});
+export type PlayerValues = z.infer<typeof playerSchema>;
+
+export function playerPayload(v: PlayerValues) {
+  const blank = (s?: string) => (s && s.trim() !== "" ? s.trim() : null);
+  const num = (s?: string) => (s && s.trim() !== "" ? Number(s) : null);
+  const primary = blank(v.primary_position);
+  return {
+    full_name: v.full_name.trim(),
+    date_of_birth: v.date_of_birth,
+    nationality: blank(v.nationality),
+    height_cm: num(v.height_cm),
+    weight_kg: num(v.weight_kg),
+    preferred_foot: blank(v.preferred_foot),
+    primary_position: primary,
+    secondary_positions: (v.secondary_positions ?? []).filter(
+      (p) => p !== primary,
+    ),
+    visibility: v.visibility,
+    profile_picture_url: blank(v.profile_picture_url),
+    biography: blank(v.biography),
+  };
+}
+
+export const careerSchema = z
+  .object({
+    club_id: z.string().min(1, "Choose a club"),
+    team_label: z.string().trim().max(100).optional(),
+    spell_type: z.enum(["permanent", "loan", "youth", "trial"]),
+    start_date: z.string().min(1, "Start date is required"),
+    end_date: z.string().optional(),
+    appearances: numStr("Appearances", 0, 2000),
+    goals: numStr("Goals", 0, 2000),
+    assists: numStr("Assists", 0, 2000),
+  })
+  .refine((v) => !v.end_date || v.end_date >= v.start_date, {
+    path: ["end_date"],
+    message: "End date cannot be before start date",
+  });
+export type CareerValues = z.infer<typeof careerSchema>;
+
+export const mediaSchema = z.object({
+  kind: z.enum(["video", "image", "document"]),
+  title: z.string().trim().min(1, "Title is required").max(200),
+  url: z
+    .string()
+    .trim()
+    .regex(/^https?:\/\/\S+$/i, "Must start with http:// or https://"),
+});
+export type MediaValues = z.infer<typeof mediaSchema>;
+
+export const teamSchema = z.object({
+  club_id: z.string().min(1, "Choose a club"),
+  name: z.string().trim().min(1, "Name is required").max(150),
+  team_type: z.string().min(1),
+});
+export type TeamValues = z.infer<typeof teamSchema>;

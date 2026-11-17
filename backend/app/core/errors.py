@@ -7,10 +7,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 class AppError(Exception):
     """Domain error with a stable machine-readable code."""
 
-    def __init__(self, status_code: int, code: str, message: str):
+    def __init__(self, status_code: int, code: str, message: str, details=None):
         self.status_code = status_code
         self.code = code
         self.message = message
+        self.details = details
         super().__init__(message)
 
 
@@ -24,7 +25,7 @@ def _body(code: str, message: str, details=None) -> dict:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError):
-        return JSONResponse(_body(exc.code, exc.message), status_code=exc.status_code)
+        return JSONResponse(_body(exc.code, exc.message, exc.details), status_code=exc.status_code)
 
     @app.exception_handler(StarletteHTTPException)
     async def _http_error(_: Request, exc: StarletteHTTPException):

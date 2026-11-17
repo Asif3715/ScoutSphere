@@ -53,5 +53,23 @@ Two ways to scope to an organization: header-scoped routes (`/clubs`) use `X-Org
 
 Business rules: only a Club Owner may grant, change or remove owner access; an organization always keeps at least one owner; removed members keep their history and can be re-invited; clubs are archived (soft delete), never hard-deleted; reference clubs are global and read-only for tenants. Lists return `{items,total,page,page_size}` with `page_size` max 100.
 
+## Phase 3 endpoints (header-scoped with `X-Organization-Id`)
+
+| Endpoint | Permission |
+|---|---|
+| `GET /players` | `players:read`. Filters: `q, position, group, nationality, foot, min_age, max_age, min_height, max_height, club_id, team_id, scope=all\|mine\|network, sort=name\|age_asc\|age_desc\|newest, page, page_size` |
+| `POST /players` | `players:write`. Returns 409 `possible_duplicate` (with candidates in `details`) unless `allow_duplicate=true` |
+| `GET /players/{id}` | `players:read` (only if visible to your organization, else 404) |
+| `PATCH/DELETE /players/{id}` | `players:write`, and your organization must have created the player |
+| `GET/POST /players/{id}/career`, `PATCH/DELETE .../{entry_id}` | read / `players:write` |
+| `GET/POST /players/{id}/media`, `DELETE .../{media_id}` | read / `players:write`; links are private to the adding organization |
+| `GET/POST /teams`, `GET/PATCH/DELETE /teams/{id}` | `clubs:read` / `clubs:manage` |
+| `GET /teams/{id}/squad?include_left=&group=` | `clubs:read` + `players:read` |
+| `POST /teams/{id}/players`, `PATCH/DELETE .../{membership_id}`, `POST .../{membership_id}/transfer` | `clubs:manage` |
+
+Player visibility: a player is visible to your organization if it created them, if they are in one of your squads, or if their visibility is `network`/`public`. Anything else returns 404, never 403. Players under 18 cannot be `public`; other organizations never receive a minor's biography or photo.
+
+New error codes: `possible_duplicate`, `minor_cannot_be_public`, `player_in_squad`, `team_exists`, `team_has_players`, `squad_number_taken`, `already_in_squad`, `invalid_club`, `invalid_player`, `managed_by_squad`.
+
 ## Planned (later phases)
 Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.

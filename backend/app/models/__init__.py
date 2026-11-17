@@ -4,7 +4,9 @@ from app.models.audit import AuditLog
 from app.models.club import Club
 from app.models.invitation import Invitation
 from app.models.organization import Organization, OrganizationMember
+from app.models.player import Player, PlayerCareer, PlayerMedia, PlayerPosition
 from app.models.rbac import Permission, Role, RolePermission
+from app.models.team import Team, TeamPlayer
 from app.models.user import User, UserSession
 
 __all__ = [
@@ -14,8 +16,14 @@ __all__ = [
     "Organization",
     "OrganizationMember",
     "Permission",
+    "Player",
+    "PlayerCareer",
+    "PlayerMedia",
+    "PlayerPosition",
     "Role",
     "RolePermission",
+    "Team",
+    "TeamPlayer",
     "User",
     "UserSession",
 ]
