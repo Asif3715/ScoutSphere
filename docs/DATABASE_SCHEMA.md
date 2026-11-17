@@ -37,3 +37,9 @@ Detailed column definitions are written with each phase's models and kept here i
 - `organizations` gains `description`, `created_by_user_id`.
 - `clubs`: nullable `organization_id` (NULL = reference club), contact/profile fields, `archived_at`. Unique `(organization_id, lower(name))` for active managed clubs; trigram index on `name`; `founded_year` CHECK 1800-2100.
 - `invitations`: `email` (citext), `role_id`, `token_hash` (sha256, unique), `status` pending/accepted/revoked, `expires_at`. Partial unique index allows one pending invitation per `(organization_id, email)`.
+
+**Phase 3 (migration 0004, players and teams):**
+- `players` (global identity): DOB, nationality, body measurements, primary position, `visibility` (private/network/public), `owner_organization_id` (creating org, nullable for self-registered players), `claimed_by_user_id` (reserved for profile claiming), `archived_at`. CHECK constraints on height, weight, foot, position, visibility. Trigram index on `lower(full_name)` for search and duplicate detection.
+- `player_positions`: secondary positions. `player_career_history`: one row per club spell, `end_date >= start_date`, `team_player_id` marks spells opened by squad registration. `player_media`: org-private http(s) links.
+- `teams`: belong to one managed club; unique active name per club. `team_players`: squad memberships; rows are never deleted (`status` active/left); partial unique indexes allow one active membership per player per team and one active holder per squad number.
+- Deferred to later phases: contract and market-value fields (contracts phase), injury/availability records, player self-claim workflow, real file storage for media.

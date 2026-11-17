@@ -45,6 +45,7 @@ def _career_out(ctx: AuthContext, player: Player, e: PlayerCareer, club_name: st
         spell_type=e.spell_type, start_date=e.start_date, end_date=e.end_date,
         appearances=e.appearances, goals=e.goals, assists=e.assists,
         editable=_can_edit(ctx, player, e),
+        managed_by_squad=e.team_player_id is not None,
     )  # fmt: skip
 
 

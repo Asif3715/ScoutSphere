@@ -11,6 +11,8 @@ import { ROLE_LABELS } from "@/lib/types";
 const NAV = [
   { href: "/dashboard", label: "Overview", permission: null },
   { href: "/clubs", label: "Clubs", permission: "clubs:read" },
+  { href: "/teams", label: "Teams", permission: "clubs:read" },
+  { href: "/players", label: "Players", permission: "players:read" },
   { href: "/members", label: "Members", permission: "members:read" },
 ] as const;
 

@@ -29,6 +29,9 @@ This section was added after reviewing the original blueprint. Where it conflict
 
 - **Organization creation:** any individual `standard` account can found an organization and becomes its Club Owner (Phase 2 decision). Player and agent accounts join organizations by invitation only. Platform admins can suspend or reactivate any organization.
 
+- **Player visibility (Phase 3):** new players are `private`. Cross-organization duplicate detection only considers players visible to the creating organization, so it can never reveal a hidden player; resolving duplicates across private records is a future platform-admin merge tool.
+- **Squad registration and career history:** adding a player to a team opens a career spell at that team's club; releasing closes it. Moving a player between teams is a single transaction. Closing spells at clubs managed by other organizations is those organizations' responsibility.
+
 ## 0.3 Authentication details
 
 - Argon2id password hashing. Short-lived access JWT (about 15 min) plus rotating, revocable refresh tokens stored hashed in `user_sessions`. Refresh token in an `httpOnly`, `Secure`, `SameSite` cookie; access token held in memory by the frontend.

@@ -181,6 +181,7 @@ class CareerOut(BaseModel):
     goals: int | None
     assists: int | None
     editable: bool
+    managed_by_squad: bool  # maintained by squad registration; cannot be deleted manually
 
 
 # ---- media --------------------------------------------------------------------------

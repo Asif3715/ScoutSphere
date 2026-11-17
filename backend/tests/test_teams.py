@@ -162,7 +162,7 @@ async def test_release_closes_history_and_frees_number(client):
         and spells[0]["club_name"] == "Alpha Senior"
         and spells[0]["end_date"] is None
     )
-    assert spells[0]["team_label"] == "First Team"
+    assert spells[0]["team_label"] == "First Team" and spells[0]["managed_by_squad"] is True
     assert (await client.get(f"{API}/players/{p['id']}", headers=h)).json()["current_club"][
         "club_name"
     ] == "Alpha Senior"
