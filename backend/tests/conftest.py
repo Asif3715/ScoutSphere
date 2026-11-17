@@ -87,7 +87,8 @@ def _clean_tables():
     )
     conn.autocommit = True
     conn.cursor().execute(
-        "TRUNCATE audit_logs, user_sessions, invitations, clubs, organization_members,"
+        "TRUNCATE audit_logs, user_sessions, invitations, player_media, player_career_history,"
+        " player_positions, team_players, teams, players, clubs, organization_members,"
         " organizations, users CASCADE"
     )
     conn.close()
