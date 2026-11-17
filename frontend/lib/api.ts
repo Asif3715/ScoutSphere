@@ -1,4 +1,7 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Browser code uses the public URL; server components inside Docker reach the
+// backend over the compose network via INTERNAL_API_URL.
+export const API_URL =
+  process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export type ReadinessResponse = {
   status: "ok" | "degraded";
