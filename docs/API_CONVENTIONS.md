@@ -71,5 +71,24 @@ Player visibility: a player is visible to your organization if it created them, 
 
 New error codes: `possible_duplicate`, `minor_cannot_be_public`, `player_in_squad`, `team_exists`, `team_has_players`, `squad_number_taken`, `already_in_squad`, `invalid_club`, `invalid_player`, `managed_by_squad`.
 
+## Phase 4 endpoints (header-scoped with `X-Organization-Id`)
+
+| Endpoint | Permission |
+|---|---|
+| `GET /scouts` (`q, position, age_group, region, min_experience, status=active\|inactive\|all`) | `scouts:read` |
+| `POST /scouts` | `scouts:manage` to profile another member; a scout (`reports:write`) can create their own |
+| `GET /scouts/{id}`, `PATCH /scouts/{id}` | read / own profile or `scouts:manage` (`is_active` is manager-only) |
+| `GET/POST /competitions`, `GET/PATCH/DELETE /competitions/{id}` | `matches:read` / `matches:manage` |
+| `POST /competitions/{id}/seasons`, `GET/PATCH/DELETE /seasons/{id}` | read / manage |
+| `POST /seasons/{id}/participants`, `DELETE /seasons/{id}/participants/{club_id}` | manage |
+| `GET/POST /matches`, `GET/PATCH/DELETE /matches/{id}` | `matches:read` / `matches:manage` |
+| `POST /matches/{id}/events`, `DELETE .../events/{event_id}`, `PUT /matches/{id}/statistics` | manage; match must be live or finished |
+
+**Global vs organization data.** Competitions, seasons and matches are either private to one organization or *global* (maintained by platform admins by calling the same endpoints with no `X-Organization-Id`). Tenants can read global rows but never change them (404). A global competition can only list global reference clubs.
+
+**Match rules.** Both clubs must be participants of the match's season. Status moves `scheduled -> live -> finished` (or `postponed`/`cancelled`; a finished match cannot be re-opened). A finished match needs a score; scheduled, postponed and cancelled matches have none (moving a live match to cancelled clears the provisional score). Played matches cannot be deleted. Statistics validate `shots_on_target <= shots` and combined possession <= 100.
+
+New error codes: `scout_exists`, `not_a_member`, `competition_exists`, `season_exists`, `already_participant`, `participant_has_matches`, `season_has_matches`, `club_not_in_season`, `invalid_season`, `invalid_transition`, `scores_required`, `scores_incomplete`, `scores_not_allowed`, `match_not_started`, `match_played`, `invalid_possession`, `player_not_allowed`.
+
 ## Planned (later phases)
 Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.

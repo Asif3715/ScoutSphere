@@ -188,3 +188,121 @@ export const teamSchema = z.object({
   team_type: z.string().min(1),
 });
 export type TeamValues = z.infer<typeof teamSchema>;
+
+// ---- scouts, competitions, matches ----------------------------------------------------
+export const scoutSchema = z.object({
+  user_id: z.string().optional(),
+  bio: z.string().max(3000).optional(),
+  experience_years: numStr("Experience", 0, 60),
+  positions: z.array(z.string()).optional(),
+  age_groups: z.array(z.string()).optional(),
+  regions: z.string().optional(), // comma separated in the form
+});
+export type ScoutValues = z.infer<typeof scoutSchema>;
+
+export function scoutPayload(v: ScoutValues) {
+  const regions = (v.regions ?? "")
+    .split(",")
+    .map((r) => r.trim())
+    .filter(Boolean);
+  return {
+    bio: v.bio?.trim() ? v.bio.trim() : null,
+    experience_years:
+      v.experience_years && v.experience_years.trim() !== ""
+        ? Number(v.experience_years)
+        : null,
+    positions: v.positions ?? [],
+    age_groups: v.age_groups ?? [],
+    regions: [...new Set(regions)],
+  };
+}
+
+export const competitionSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(200),
+  country: z.string().trim().max(100).optional(),
+  competition_type: z.enum([
+    "league",
+    "cup",
+    "friendly",
+    "youth_league",
+    "international",
+    "other",
+  ]),
+});
+export type CompetitionValues = z.infer<typeof competitionSchema>;
+
+export const seasonSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required").max(50),
+    start_date: z.string().min(1, "Start date is required"),
+    end_date: z.string().min(1, "End date is required"),
+  })
+  .refine((v) => v.end_date >= v.start_date, {
+    path: ["end_date"],
+    message: "End date cannot be before start date",
+  });
+export type SeasonValues = z.infer<typeof seasonSchema>;
+
+export const matchSchema = z
+  .object({
+    season_id: z.string().min(1, "Choose a season"),
+    home_club_id: z.string().min(1, "Choose the home club"),
+    away_club_id: z.string().min(1, "Choose the away club"),
+    kickoff_at: z.string().min(1, "Kick-off time is required"),
+    venue: z.string().trim().max(200).optional(),
+    round_label: z.string().trim().max(50).optional(),
+  })
+  .refine((v) => v.home_club_id !== v.away_club_id, {
+    path: ["away_club_id"],
+    message: "A club cannot play itself",
+  });
+export type MatchValues = z.infer<typeof matchSchema>;
+
+/** datetime-local value (no zone) -> ISO string in UTC. */
+export function toIsoUtc(local: string): string {
+  return new Date(local).toISOString();
+}
+
+export const eventSchema = z.object({
+  event_type: z.enum([
+    "goal",
+    "own_goal",
+    "penalty",
+    "yellow_card",
+    "red_card",
+    "substitution",
+  ]),
+  minute: z
+    .string()
+    .regex(/^\d{1,3}$/, "Enter a minute")
+    .refine((v) => +v <= 150, "Max 150"),
+  club_id: z.string().min(1, "Choose a club"),
+  description: z.string().max(300).optional(),
+});
+export type EventValues = z.infer<typeof eventSchema>;
+
+export const statsSideSchema = z
+  .record(z.string(), z.string())
+  .superRefine((v, ctx) => {
+    for (const [k, val] of Object.entries(v)) {
+      if (val.trim() !== "" && !/^\d+$/.test(val.trim()))
+        ctx.addIssue({ code: "custom", path: [k], message: "Whole number" });
+    }
+    const n = (k: string) => (v[k]?.trim() ? Number(v[k]) : null);
+    if (n("possession_pct") != null && n("possession_pct")! > 100)
+      ctx.addIssue({
+        code: "custom",
+        path: ["possession_pct"],
+        message: "Max 100",
+      });
+    if (
+      n("shots") != null &&
+      n("shots_on_target") != null &&
+      n("shots_on_target")! > n("shots")!
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["shots_on_target"],
+        message: "Cannot exceed shots",
+      });
+  });

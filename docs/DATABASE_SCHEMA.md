@@ -43,3 +43,9 @@ Detailed column definitions are written with each phase's models and kept here i
 - `player_positions`: secondary positions. `player_career_history`: one row per club spell, `end_date >= start_date`, `team_player_id` marks spells opened by squad registration. `player_media`: org-private http(s) links.
 - `teams`: belong to one managed club; unique active name per club. `team_players`: squad memberships; rows are never deleted (`status` active/left); partial unique indexes allow one active membership per player per team and one active holder per squad number.
 - Deferred to later phases: contract and market-value fields (contracts phase), injury/availability records, player self-claim workflow, real file storage for media.
+
+**Phase 4 (migration 0005, scouts and matches):**
+- `scout_profiles` (one per organization member, `experience_years` CHECK 0-60, `is_active`) and `scout_specializations` (composite key of profile, kind `position|age_group|region`, value).
+- `competitions` (`organization_id` NULL = global), unique active name per scope via a `coalesce(organization_id, zero-uuid), lower(name)` index. `competition_seasons` (unique name per competition, `end_date >= start_date`), `competition_participants` (unique club per season).
+- `matches` (global when `organization_id` is NULL): CHECKs for different clubs, valid status, paired non-negative scores, and finished-implies-scored. `match_events` (type, minute 0-150, optional player), `match_statistics` (one row per club per match; possession 0-100, shots on target <= shots).
+- Deferred: scout assignments and assigned competitions/matches (Phase 5), match-level player statistics (advanced statistics, later).

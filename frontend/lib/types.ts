@@ -191,3 +191,135 @@ export type Squad = {
   players: SquadPlayer[];
   counts_by_group: Record<string, number>;
 };
+
+// ---- scouts, competitions, matches ----------------------------------------------------
+export const AGE_GROUPS = [
+  "u15",
+  "u16",
+  "u17",
+  "u18",
+  "u19",
+  "u21",
+  "u23",
+  "senior",
+] as const;
+export const COMPETITION_TYPES = [
+  "league",
+  "cup",
+  "friendly",
+  "youth_league",
+  "international",
+  "other",
+] as const;
+export const MATCH_STATUSES = [
+  "scheduled",
+  "live",
+  "finished",
+  "postponed",
+  "cancelled",
+] as const;
+export const EVENT_TYPES = [
+  "goal",
+  "own_goal",
+  "penalty",
+  "yellow_card",
+  "red_card",
+  "substitution",
+] as const;
+export const STAT_FIELDS = [
+  ["possession_pct", "Possession %"],
+  ["shots", "Shots"],
+  ["shots_on_target", "On target"],
+  ["corners", "Corners"],
+  ["fouls", "Fouls"],
+  ["offsides", "Offsides"],
+  ["yellow_cards", "Yellow cards"],
+  ["red_cards", "Red cards"],
+] as const;
+// Mirrors the backend workflow so the UI only offers legal next steps.
+export const MATCH_TRANSITIONS: Record<string, string[]> = {
+  scheduled: ["live", "finished", "postponed", "cancelled"],
+  live: ["finished", "cancelled"],
+  finished: [],
+  postponed: ["scheduled", "cancelled"],
+  cancelled: ["scheduled"],
+};
+
+export type Scout = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  email: string;
+  org_role: string;
+  bio: string | null;
+  experience_years: number | null;
+  positions: string[];
+  age_groups: string[];
+  regions: string[];
+  is_active: boolean;
+  can_edit: boolean;
+  created_at: string;
+};
+
+export type Season = {
+  id: string;
+  competition_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  participant_count: number;
+  match_count: number;
+};
+export type Competition = {
+  id: string;
+  name: string;
+  country: string | null;
+  competition_type: string;
+  is_global: boolean;
+  editable: boolean;
+  season_count: number;
+  created_at: string;
+};
+export type CompetitionDetail = Competition & { seasons: Season[] };
+export type SeasonDetail = Season & {
+  competition_name: string;
+  editable: boolean;
+  participants: { club_id: string; club_name: string; is_reference: boolean }[];
+};
+
+export type MatchSummary = {
+  id: string;
+  competition_id: string;
+  competition_name: string;
+  season_id: string;
+  season_name: string;
+  home_club_id: string;
+  home_club_name: string;
+  away_club_id: string;
+  away_club_name: string;
+  kickoff_at: string;
+  venue: string | null;
+  round_label: string | null;
+  status: string;
+  home_score: number | null;
+  away_score: number | null;
+  is_global: boolean;
+  editable: boolean;
+};
+export type MatchEvent = {
+  id: string;
+  event_type: string;
+  minute: number;
+  club_id: string;
+  club_name: string;
+  player_id: string | null;
+  player_name: string | null;
+  description: string | null;
+};
+export type StatsSide = Partial<
+  Record<(typeof STAT_FIELDS)[number][0], number | null>
+>;
+export type MatchDetail = MatchSummary & {
+  events: MatchEvent[];
+  statistics: { home: StatsSide | null; away: StatsSide | null };
+};

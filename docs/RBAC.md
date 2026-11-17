@@ -27,10 +27,15 @@ The AI agent receives the same object; the model never decides its own permissio
 
 Platform: `super_admin` manages organizations, platform users, audit logs and agent executions; no implicit read of org-private content.
 
+## Phase 4 permissions
+- `scouts:read` (owner, admin, recruitment manager, scout), `scouts:manage` (owner, admin). Coaches have no scout-directory access.
+- `matches:read` (all organization roles), `matches:manage` (owner, admin). Covers competitions, seasons, participants, matches, events and statistics.
+- Global competitions/matches are managed through the platform permission `platform:orgs_manage` (super admin only; Platform Support cannot).
+
 ## Rules
 1. Authorize in the service layer, on every operation.
 2. Org-scoped queries always include `organization_id` from `AuthContext`, never from client input alone.
 3. Ownership checks (e.g. a scout's own reports) are separate from role permissions.
 4. Sensitive actions write to `audit_logs`.
 
-The authoritative permission list and role mapping is `backend/app/permissions/catalog.py` (28 permissions, 7 roles as of Phase 1). Tests assert platform and organization permissions never overlap and that Platform Support holds no organization permission.
+The authoritative permission list and role mapping is `backend/app/permissions/catalog.py` (32 permissions, 7 roles as of Phase 4). Tests assert platform and organization permissions never overlap and that Platform Support holds no organization permission.

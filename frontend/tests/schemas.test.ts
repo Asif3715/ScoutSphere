@@ -236,3 +236,95 @@ describe("mediaSchema / teamSchema", () => {
     ).toBe(true);
   });
 });
+
+import {
+  competitionSchema,
+  matchSchema,
+  scoutPayload,
+  seasonSchema,
+  statsSideSchema,
+  toIsoUtc,
+} from "@/lib/schemas";
+
+describe("scoutPayload", () => {
+  it("splits and dedupes regions, nulls blanks", () => {
+    const p = scoutPayload({
+      regions: " Spain, Portugal ,spain,, Spain ",
+      experience_years: "8",
+      bio: " ",
+    });
+    expect(p).toMatchObject({
+      regions: ["Spain", "Portugal", "spain"],
+      experience_years: 8,
+      bio: null,
+    });
+    expect(scoutPayload({}).experience_years).toBeNull();
+  });
+});
+
+describe("competition and season schemas", () => {
+  it("validates names and dates", () => {
+    expect(
+      competitionSchema.safeParse({ name: "X", competition_type: "league" })
+        .success,
+    ).toBe(false);
+    expect(
+      competitionSchema.safeParse({
+        name: "Alpha League",
+        competition_type: "cup",
+      }).success,
+    ).toBe(true);
+    expect(
+      competitionSchema.safeParse({
+        name: "Alpha League",
+        competition_type: "tournament",
+      }).success,
+    ).toBe(false);
+    const s = {
+      name: "2025/26",
+      start_date: "2025-08-01",
+      end_date: "2026-05-31",
+    };
+    expect(seasonSchema.safeParse(s).success).toBe(true);
+    expect(
+      seasonSchema.safeParse({ ...s, end_date: "2025-01-01" }).success,
+    ).toBe(false);
+  });
+});
+
+describe("matchSchema / toIsoUtc / stats", () => {
+  const m = {
+    season_id: "s",
+    home_club_id: "a",
+    away_club_id: "b",
+    kickoff_at: "2026-03-01T15:00",
+  };
+  it("requires two different clubs", () => {
+    expect(matchSchema.safeParse(m).success).toBe(true);
+    expect(matchSchema.safeParse({ ...m, away_club_id: "a" }).success).toBe(
+      false,
+    );
+    expect(matchSchema.safeParse({ ...m, season_id: "" }).success).toBe(false);
+  });
+  it("converts local time to an ISO UTC string", () => {
+    expect(toIsoUtc("2026-03-01T15:00")).toMatch(
+      /^2026-03-01T\d\d:00:00\.000Z$/,
+    );
+  });
+  it("checks statistics consistency", () => {
+    expect(
+      statsSideSchema.safeParse({
+        shots: "10",
+        shots_on_target: "4",
+        possession_pct: "55",
+      }).success,
+    ).toBe(true);
+    expect(
+      statsSideSchema.safeParse({ shots: "3", shots_on_target: "9" }).success,
+    ).toBe(false);
+    expect(statsSideSchema.safeParse({ possession_pct: "101" }).success).toBe(
+      false,
+    );
+    expect(statsSideSchema.safeParse({ corners: "x" }).success).toBe(false);
+  });
+});
