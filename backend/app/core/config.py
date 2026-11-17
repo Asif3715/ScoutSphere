@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6380/0"
 
     cors_origins: list[str] = ["http://localhost:3000"]
+    frontend_url: str = "http://localhost:3000"
+    invitation_days: int = 7
 
     # Auth. jwt_secret MUST be overridden outside local/test (enforced in security.py).
     jwt_secret: str = "dev-only-insecure-secret-change-me"

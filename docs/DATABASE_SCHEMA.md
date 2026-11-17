@@ -28,3 +28,12 @@ Tables marked **[org]** carry `organization_id` (NOT NULL, indexed, FK). **[glob
 - Status machines (assignments, reports, recruitment stages) use enum/check constraints plus append-only history tables.
 
 Detailed column definitions are written with each phase's models and kept here in sync.
+
+## Implemented so far
+
+**Phase 1 (migration 0002):** users, user_sessions, roles, permissions, role_permissions, organizations, organization_members, audit_logs.
+
+**Phase 2 (migration 0003):**
+- `organizations` gains `description`, `created_by_user_id`.
+- `clubs`: nullable `organization_id` (NULL = reference club), contact/profile fields, `archived_at`. Unique `(organization_id, lower(name))` for active managed clubs; trigram index on `name`; `founded_year` CHECK 1800-2100.
+- `invitations`: `email` (citext), `role_id`, `token_hash` (sha256, unique), `status` pending/accepted/revoked, `expires_at`. Partial unique index allows one pending invitation per `(organization_id, email)`.

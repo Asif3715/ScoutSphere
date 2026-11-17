@@ -2,18 +2,21 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { AuthCard, Field } from "@/components/auth/field";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/http";
+import { safeNext } from "@/lib/redirect";
 import { loginSchema, type LoginValues } from "@/lib/schemas";
 
-export default function LoginPage() {
+function LoginForm() {
   const { user, loading, login } = useAuth();
   const router = useRouter();
+  const next = safeNext(useSearchParams().get("next"));
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
@@ -22,14 +25,14 @@ export default function LoginPage() {
   } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) });
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard");
-  }, [loading, user, router]);
+    if (!loading && user) router.replace(next);
+  }, [loading, user, router, next]);
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
     try {
       await login(values.email, values.password);
-      router.replace("/dashboard");
+      router.replace(next);
     } catch (e) {
       setFormError(
         e instanceof ApiError ? e.message : "Could not reach the server",
@@ -69,10 +72,21 @@ export default function LoginPage() {
       </form>
       <p className="mt-4 text-sm">
         No account?{" "}
-        <Link href="/register" className="text-teal-600 underline">
+        <Link
+          href={`/register${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`}
+          className="text-teal-600 underline"
+        >
           Register
         </Link>
       </p>
     </AuthCard>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

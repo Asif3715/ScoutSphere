@@ -13,7 +13,10 @@ Every error has the same shape:
 |---|---|
 | 401 | `not_authenticated`, `invalid_token`, `invalid_credentials`, `invalid_refresh_token` |
 | 403 | `forbidden` (missing permission), `not_a_member`, `account_disabled` |
-| 409 | `email_taken` |
+| 409 | `email_taken`, `club_exists`, `already_member`, `invitation_exists`, `last_owner` |
+| 400 | `invalid_invitation` (same error for bad, expired, revoked or used tokens), `invalid_organization` |
+| 403 (more) | `owner_required`, `email_mismatch`, `account_type_not_allowed` |
+| 404 | `not_found` (also returned for resources of other organizations) |
 | 422 | `validation_error` |
 
 ## Authentication
@@ -32,6 +35,23 @@ Every error has the same shape:
 ## Authorization in code
 - `get_current_user` authenticates; `get_auth_context` builds the `AuthContext`; `require_permission("resource:action")` is the route dependency that enforces a permission and writes an `authz.denied` audit row on failure.
 - Permissions and role mappings live in `backend/app/permissions/catalog.py` and are mirrored into the DB at startup.
+
+## Phase 2 endpoints
+Two ways to scope to an organization: header-scoped routes (`/clubs`) use `X-Organization-Id`; path-scoped routes (`/organizations/{org_id}/...`) use the path id. Both verify an active membership.
+
+| Endpoint | Permission |
+|---|---|
+| `POST /organizations` | any `standard` account; creator becomes Club Owner |
+| `GET/PATCH /organizations/{id}` | `org:read` / `org:update` (owner only) |
+| `GET /organizations/{id}/dashboard` | `org:read` |
+| `GET /organizations/{id}/members` | `members:read` |
+| `PATCH/DELETE /organizations/{id}/members/{member_id}` | `members:manage` (owner rules below) |
+| `POST/GET /organizations/{id}/invitations`, `DELETE .../{invitation_id}` | `members:manage` |
+| `POST /invitations/preview`, `POST /invitations/accept` | token is the credential; accept needs login and matching email |
+| `GET/POST /clubs`, `GET/PATCH/DELETE /clubs/{id}` | `clubs:read` / `clubs:manage`; `?scope=mine\|reference&q=&country=&page=&page_size=` |
+| `GET /platform/organizations`, `PATCH /platform/organizations/{id}/status`, `POST /platform/clubs` | `platform:orgs_manage` |
+
+Business rules: only a Club Owner may grant, change or remove owner access; an organization always keeps at least one owner; removed members keep their history and can be re-invited; clubs are archived (soft delete), never hard-deleted; reference clubs are global and read-only for tenants. Lists return `{items,total,page,page_size}` with `page_size` max 100.
 
 ## Planned (later phases)
 Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.
