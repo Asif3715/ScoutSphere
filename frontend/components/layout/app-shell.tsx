@@ -13,6 +13,9 @@ const NAV = [
   { href: "/clubs", label: "Clubs", permission: "clubs:read" },
   { href: "/teams", label: "Teams", permission: "clubs:read" },
   { href: "/players", label: "Players", permission: "players:read" },
+  { href: "/scouts", label: "Scouts", permission: "scouts:read" },
+  { href: "/competitions", label: "Competitions", permission: "matches:read" },
+  { href: "/matches", label: "Matches", permission: "matches:read" },
   { href: "/members", label: "Members", permission: "members:read" },
 ] as const;
 

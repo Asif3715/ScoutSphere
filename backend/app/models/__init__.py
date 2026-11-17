@@ -2,16 +2,33 @@
 
 from app.models.audit import AuditLog
 from app.models.club import Club
+from app.models.competition import (
+    Competition,
+    CompetitionParticipant,
+    CompetitionSeason,
+    Match,
+    MatchEvent,
+    MatchStatistics,
+)
 from app.models.invitation import Invitation
 from app.models.organization import Organization, OrganizationMember
 from app.models.player import Player, PlayerCareer, PlayerMedia, PlayerPosition
 from app.models.rbac import Permission, Role, RolePermission
+from app.models.scout import ScoutProfile, ScoutSpecialization
 from app.models.team import Team, TeamPlayer
 from app.models.user import User, UserSession
 
 __all__ = [
     "AuditLog",
     "Club",
+    "Competition",
+    "CompetitionParticipant",
+    "CompetitionSeason",
+    "Match",
+    "MatchEvent",
+    "MatchStatistics",
+    "ScoutProfile",
+    "ScoutSpecialization",
     "Invitation",
     "Organization",
     "OrganizationMember",

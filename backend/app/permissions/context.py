@@ -24,6 +24,18 @@ class AuthContext:
         if permission not in self.permissions:
             raise AppError(403, "forbidden", "You do not have permission to perform this action")
 
+    def require_scoped(self, permission: str) -> None:
+        """For data that is either organization-private or global (competitions, matches).
+        With an active organization the org permission is required; without one, only a
+        platform admin may act (on global data)."""
+        if self.organization_id is None:
+            if "platform:orgs_manage" not in self.permissions:
+                raise AppError(
+                    403, "forbidden", "You do not have permission to perform this action"
+                )
+        else:
+            self.require(permission)
+
     def require_org(self) -> uuid.UUID:
         if self.organization_id is None:
             raise AppError(400, "organization_required", "An active organization is required")

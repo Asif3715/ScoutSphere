@@ -130,3 +130,22 @@ def require_org_permission(permission: str) -> Callable:
         return ctx
 
     return _check
+
+
+def require_scoped(permission: str) -> Callable:
+    """Route dependency for data that is organization-private or global: an organization
+    member needs `permission`; with no organization, only a platform admin gets through."""
+
+    async def _check(
+        request: Request,
+        ctx: AuthContext = Depends(get_auth_context),
+        db: AsyncSession = Depends(get_db),
+    ) -> AuthContext:
+        allowed = (
+            ctx.has("platform:orgs_manage") if ctx.organization_id is None else ctx.has(permission)
+        )
+        if not allowed:
+            await _deny(db, request, ctx, permission)
+        return ctx
+
+    return _check

@@ -32,6 +32,9 @@ This section was added after reviewing the original blueprint. Where it conflict
 - **Player visibility (Phase 3):** new players are `private`. Cross-organization duplicate detection only considers players visible to the creating organization, so it can never reveal a hidden player; resolving duplicates across private records is a future platform-admin merge tool.
 - **Squad registration and career history:** adding a player to a team opens a career spell at that team's club; releasing closes it. Moving a player between teams is a single transaction. Closing spells at clubs managed by other organizations is those organizations' responsibility.
 
+- **Competitions and matches (Phase 4):** use the same global-or-private model as clubs. Platform admins maintain *global* competitions and matches; organizations may also create private ones. A private match may sit inside a global competition. Matches must be between clubs registered in the season, so relationships stay consistent.
+- **Scout profiles:** belong to organization members (a person can have a different profile in each organization). The directory lists only active members with active profiles by default.
+
 ## 0.3 Authentication details
 
 - Argon2id password hashing. Short-lived access JWT (about 15 min) plus rotating, revocable refresh tokens stored hashed in `user_sessions`. Refresh token in an `httpOnly`, `Secure`, `SameSite` cookie; access token held in memory by the frontend.
