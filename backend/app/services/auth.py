@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select, update
+from sqlalchemy import exists, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +21,7 @@ from app.core.security import (
 from app.models.user import User, UserSession
 from app.services.audit import record_audit
 
+REUSE_LEEWAY = timedelta(seconds=10)
 INVALID_CREDENTIALS = AppError(401, "invalid_credentials", "Invalid email or password")
 INVALID_REFRESH = AppError(401, "invalid_refresh_token", "Invalid or expired refresh token")
 
@@ -124,25 +125,46 @@ async def refresh(db: AsyncSession, *, token: str, ua: str | None, ip: str | Non
     if sess is None or sess.refresh_token_hash != hash_refresh_secret(secret):
         raise INVALID_REFRESH
 
+    now = _now()
+    benign_race = False
     if sess.revoked_at is not None:
-        # A rotated-out token was presented again: assume theft, kill the whole family.
-        await db.execute(
-            update(UserSession)
-            .where(UserSession.family_id == sess.family_id, UserSession.revoked_at.is_(None))
-            .values(revoked_at=_now())
+        # Two browser tabs can refresh with the same cookie at the same instant: the first
+        # rotates it, the second then presents a token that was revoked a moment ago. That is
+        # not theft. It is tolerated only for a few seconds AND only while the login still has
+        # a live session; after logout or a real reuse-detection every session is revoked, so
+        # this cannot revive a dead login.
+        recently_rotated = now - sess.revoked_at <= REUSE_LEEWAY
+        family_alive = await db.scalar(
+            select(
+                exists().where(
+                    UserSession.family_id == sess.family_id,
+                    UserSession.revoked_at.is_(None),
+                    UserSession.expires_at > now,
+                )
+            )
         )
-        await record_audit(
-            db, action="auth.refresh_reuse_detected", outcome="denied",
-            actor_user_id=sess.user_id, ip_address=ip,
-        )  # fmt: skip
-        await db.commit()
-        raise INVALID_REFRESH
+        if recently_rotated and family_alive:
+            benign_race = True
+        else:
+            # A rotated-out token was replayed later: assume theft, kill the whole family.
+            await db.execute(
+                update(UserSession)
+                .where(UserSession.family_id == sess.family_id, UserSession.revoked_at.is_(None))
+                .values(revoked_at=now)
+            )
+            await record_audit(
+                db, action="auth.refresh_reuse_detected", outcome="denied",
+                actor_user_id=sess.user_id, ip_address=ip,
+            )  # fmt: skip
+            await db.commit()
+            raise INVALID_REFRESH
 
     user = await db.get(User, sess.user_id)
     if sess.expires_at <= _now() or user is None or not user.is_active:
         raise INVALID_REFRESH
 
-    sess.revoked_at = _now()
+    if not benign_race:
+        sess.revoked_at = now
     issued = await _issue_session(db, user, family_id=sess.family_id, ua=ua, ip=ip)
     await db.commit()
     return issued

@@ -1,20 +1,30 @@
 import uuid
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
+
+from app.schemas.base import RequestModel
+
+# Passwords are never trimmed: a password with leading/trailing spaces must stay as typed.
+NewPassword = Annotated[
+    str, StringConstraints(strip_whitespace=False, min_length=10, max_length=128)
+]
+LoginPassword = Annotated[
+    str, StringConstraints(strip_whitespace=False, min_length=1, max_length=128)
+]
 
 
-class RegisterRequest(BaseModel):
+class RegisterRequest(RequestModel):
     email: EmailStr
-    password: str = Field(min_length=10, max_length=128)
+    password: NewPassword
     full_name: str = Field(min_length=1, max_length=200)
     # Platform staff roles can never be self-assigned.
     account_type: Literal["standard", "player", "agent"] = "standard"
 
 
-class LoginRequest(BaseModel):
+class LoginRequest(RequestModel):
     email: EmailStr
-    password: str = Field(min_length=1, max_length=128)
+    password: LoginPassword
 
 
 class UserOut(BaseModel):

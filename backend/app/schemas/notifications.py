@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.schemas.base import RequestModel
+
 
 class NotificationOut(BaseModel):
     id: uuid.UUID
@@ -20,7 +22,7 @@ class PreferenceOut(BaseModel):
     enabled: bool
 
 
-class PreferencesUpdate(BaseModel):
+class PreferencesUpdate(RequestModel):
     preferences: dict[str, bool]
 
 

@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Wide data tables scroll inside themselves on phones instead of clipping the page. */
+@media (max-width: 767px) {
+  main table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}

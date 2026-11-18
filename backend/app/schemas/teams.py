@@ -4,18 +4,19 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.base import RequestModel
 from app.schemas.players import Position
 
 TeamType = Literal["senior", "u23", "u21", "u19", "u18", "u17", "u16", "academy", "womens", "other"]
 
 
-class TeamCreate(BaseModel):
+class TeamCreate(RequestModel):
     club_id: uuid.UUID
     name: str = Field(min_length=1, max_length=150)
     team_type: TeamType = "senior"
 
 
-class TeamUpdate(BaseModel):
+class TeamUpdate(RequestModel):
     name: str | None = Field(default=None, min_length=1, max_length=150)
     team_type: TeamType | None = None
 
@@ -30,14 +31,14 @@ class TeamOut(BaseModel):
     created_at: datetime
 
 
-class SquadAdd(BaseModel):
+class SquadAdd(RequestModel):
     player_id: uuid.UUID
     squad_number: int | None = Field(default=None, ge=1, le=99)
     position: Position | None = None
     registered_on: date | None = None
 
 
-class SquadUpdate(BaseModel):
+class SquadUpdate(RequestModel):
     squad_number: int | None = Field(default=None, ge=1, le=99)
     position: Position | None = None
 

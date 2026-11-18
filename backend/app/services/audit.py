@@ -7,9 +7,21 @@ from app.models.audit import AuditLog
 _SENSITIVE = {"password", "token", "refresh_token", "access_token", "secret"}
 
 
+def _clean(value):
+    """PostgreSQL JSONB cannot hold NUL characters."""
+    if isinstance(value, str):
+        return value.replace("\x00", "")
+    if isinstance(value, dict):
+        return {k: _clean(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_clean(v) for v in value]
+    return value
+
+
 def _redact(data: dict | None) -> dict | None:
     if not data:
         return data
+    data = _clean(data)
     return {k: ("[redacted]" if k.lower() in _SENSITIVE else v) for k, v in data.items()}
 
 

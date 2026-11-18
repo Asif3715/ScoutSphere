@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from app.domain.scouting import RATING_ATTRIBUTES, RATING_MAX, RATING_MIN
+from app.schemas.base import RequestModel
 from app.schemas.players import Position
 
 Recommendation = Literal["strongly_recommend", "recommend", "monitor", "not_recommended"]
@@ -21,7 +22,7 @@ def _check_attributes(v: dict) -> dict:
     return v
 
 
-class ReportCreate(BaseModel):
+class ReportCreate(RequestModel):
     player_id: uuid.UUID
     observed_on: date
     match_id: uuid.UUID | None = None
@@ -52,7 +53,7 @@ class ReportCreate(BaseModel):
         return v
 
 
-class ReportUpdate(BaseModel):
+class ReportUpdate(RequestModel):
     observed_on: date | None = None
     club_id: uuid.UUID | None = None
     position_observed: Position | None = None
@@ -83,7 +84,7 @@ class ReportUpdate(BaseModel):
         return v
 
 
-class ReviewBody(BaseModel):
+class ReviewBody(RequestModel):
     decision: Decision
     comment: str | None = Field(default=None, max_length=3000)
 

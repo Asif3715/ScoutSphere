@@ -3,8 +3,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.schemas.base import RequestModel
 
-class ClubBase(BaseModel):
+
+class ClubBase(RequestModel):
     name: str = Field(min_length=1, max_length=200)
     short_name: str | None = Field(default=None, max_length=50)
     country: str | None = Field(default=None, max_length=100)
@@ -21,7 +23,7 @@ class ClubCreate(ClubBase):
     pass
 
 
-class ClubUpdate(BaseModel):
+class ClubUpdate(RequestModel):
     """All fields optional; only sent fields are changed."""
 
     name: str | None = Field(default=None, min_length=1, max_length=200)

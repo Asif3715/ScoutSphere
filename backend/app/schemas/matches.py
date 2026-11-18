@@ -4,11 +4,13 @@ from typing import Literal
 
 from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
+from app.schemas.base import RequestModel
+
 MatchStatus = Literal["scheduled", "live", "finished", "postponed", "cancelled"]
 EventType = Literal["goal", "own_goal", "penalty", "yellow_card", "red_card", "substitution"]
 
 
-class MatchCreate(BaseModel):
+class MatchCreate(RequestModel):
     season_id: uuid.UUID
     home_club_id: uuid.UUID
     away_club_id: uuid.UUID
@@ -23,7 +25,7 @@ class MatchCreate(BaseModel):
         return self
 
 
-class MatchUpdate(BaseModel):
+class MatchUpdate(RequestModel):
     kickoff_at: AwareDatetime | None = None
     venue: str | None = Field(default=None, max_length=200)
     round_label: str | None = Field(default=None, max_length=50)
@@ -52,7 +54,7 @@ class MatchOut(BaseModel):
     editable: bool
 
 
-class EventCreate(BaseModel):
+class EventCreate(RequestModel):
     event_type: EventType
     minute: int = Field(ge=0, le=150)
     club_id: uuid.UUID
@@ -71,7 +73,7 @@ class EventOut(BaseModel):
     description: str | None
 
 
-class StatsSide(BaseModel):
+class StatsSide(RequestModel):
     possession_pct: int | None = Field(default=None, ge=0, le=100)
     shots: int | None = Field(default=None, ge=0, le=99)
     shots_on_target: int | None = Field(default=None, ge=0, le=99)
@@ -92,7 +94,7 @@ class StatsSide(BaseModel):
         return self
 
 
-class StatsBody(BaseModel):
+class StatsBody(RequestModel):
     home: StatsSide | None = None
     away: StatsSide | None = None
 
@@ -107,7 +109,7 @@ class MatchDetail(MatchOut):
     statistics: StatsOut
 
 
-class MatchFilters(BaseModel):
+class MatchFilters(RequestModel):
     competition_id: uuid.UUID | None = None
     season_id: uuid.UUID | None = None
     club_id: uuid.UUID | None = None

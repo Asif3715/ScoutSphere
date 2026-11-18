@@ -13,6 +13,7 @@ from pydantic import (
 )
 
 from app.domain.football import POSITIONS, age_on
+from app.schemas.base import RequestModel
 
 Position = Literal[
     "GK", "CB", "LB", "RB", "LWB", "RWB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"
@@ -41,7 +42,7 @@ def _check_dob(v: date) -> date:
     return v
 
 
-class PlayerBase(BaseModel):
+class PlayerBase(RequestModel):
     full_name: str = Field(min_length=2, max_length=200)
     date_of_birth: date
     nationality: str | None = Field(default=None, max_length=100)
@@ -76,7 +77,7 @@ class PlayerCreate(PlayerBase):
     allow_duplicate: bool = False
 
 
-class PlayerUpdate(BaseModel):
+class PlayerUpdate(RequestModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=200)
     date_of_birth: date | None = None
     nationality: str | None = Field(default=None, max_length=100)
@@ -140,7 +141,7 @@ class DuplicateCandidate(BaseModel):
 
 
 # ---- career -------------------------------------------------------------------------
-class CareerBase(BaseModel):
+class CareerBase(RequestModel):
     club_id: uuid.UUID
     team_label: str | None = Field(default=None, max_length=100)
     spell_type: SpellType = "permanent"
@@ -159,7 +160,7 @@ class CareerCreate(CareerBase):
         return self
 
 
-class CareerUpdate(BaseModel):
+class CareerUpdate(RequestModel):
     team_label: str | None = Field(default=None, max_length=100)
     spell_type: SpellType | None = None
     start_date: date | None = None
@@ -185,7 +186,7 @@ class CareerOut(BaseModel):
 
 
 # ---- media --------------------------------------------------------------------------
-class MediaCreate(BaseModel):
+class MediaCreate(RequestModel):
     kind: MediaKind
     title: str = Field(min_length=1, max_length=200)
     url: HttpUrl

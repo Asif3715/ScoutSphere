@@ -4,18 +4,20 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.schemas.base import RequestModel
 
-class OrganizationCreate(BaseModel):
+
+class OrganizationCreate(RequestModel):
     name: str = Field(min_length=2, max_length=200)
     description: str | None = Field(default=None, max_length=2000)
 
 
-class OrganizationUpdate(BaseModel):
+class OrganizationUpdate(RequestModel):
     name: str | None = Field(default=None, min_length=2, max_length=200)
     description: str | None = Field(default=None, max_length=2000)
 
 
-class OrganizationStatusUpdate(BaseModel):
+class OrganizationStatusUpdate(RequestModel):
     status: Literal["active", "suspended", "deactivated"]
 
 
@@ -40,11 +42,11 @@ class MemberOut(BaseModel):
     joined_at: datetime
 
 
-class MemberUpdate(BaseModel):
+class MemberUpdate(RequestModel):
     role: str
 
 
-class InvitationCreate(BaseModel):
+class InvitationCreate(RequestModel):
     email: EmailStr
     role: str
 
@@ -60,7 +62,7 @@ class InvitationOut(BaseModel):
     accept_url: str | None = None
 
 
-class InvitationAccept(BaseModel):
+class InvitationAccept(RequestModel):
     token: str = Field(min_length=10, max_length=200)
 
 

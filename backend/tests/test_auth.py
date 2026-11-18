@@ -145,7 +145,15 @@ async def test_refresh_rotates_and_old_token_is_revoked(client):
     new = client.cookies.get("refresh_token", path="/api/v1/auth")
     assert new and new != old
 
-    # Replaying the rotated-out token is rejected AND burns the whole family.
+    # Replaying the rotated-out token LATER (outside the short concurrency grace window) is
+    # rejected AND burns the whole family.
+    async with SessionLocal() as db:
+        await db.execute(
+            update(UserSession)
+            .values(revoked_at=datetime.now(UTC) - timedelta(minutes=5))
+            .where(UserSession.revoked_at.is_not(None))
+        )
+        await db.commit()
     client.cookies.set("refresh_token", old, path="/api/v1/auth")
     assert (await client.post("/api/v1/auth/refresh")).status_code == 401
     client.cookies.set("refresh_token", new, path="/api/v1/auth")

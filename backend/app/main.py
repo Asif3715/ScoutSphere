@@ -7,6 +7,7 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
+from app.core.middleware import RequestGuardMiddleware, SecurityHeadersMiddleware
 from app.core.security import assert_secure_config
 from app.db.session import SessionLocal
 from app.permissions.sync import sync_rbac
@@ -29,6 +30,8 @@ def create_app() -> FastAPI:
         version=settings.version,
         openapi_url="/api/v1/openapi.json",
     )
+    app.add_middleware(RequestGuardMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware, hsts=settings.cookie_secure)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
