@@ -28,6 +28,16 @@ from app.permissions import catalog  # noqa: E402
 from app.permissions.context import AuthContext  # noqa: E402
 from app.permissions.sync import sync_rbac  # noqa: E402
 
+TABLES_TO_CLEAN = [
+    "audit_logs", "user_sessions", "invitations", "notification_preferences", "notifications",
+    "scouting_report_reviews", "scouting_report_versions", "scouting_report_ratings",
+    "scouting_reports", "assignment_history", "scout_assignments", "match_events",
+    "match_statistics", "matches", "competition_participants", "competition_seasons",
+    "competitions", "scout_specializations", "scout_profiles", "player_media",
+    "player_career_history", "player_positions", "team_players", "teams", "players", "clubs",
+    "organization_members", "organizations", "users",
+]  # fmt: skip
+
 PASSWORD = "correct-horse-battery"
 
 # Routes that exist only in tests, to exercise the permission dependencies directly.
@@ -86,13 +96,7 @@ def _clean_tables():
         host="localhost", port=5433, user="scoutsphere", password="scoutsphere", dbname=TEST_DB
     )
     conn.autocommit = True
-    conn.cursor().execute(
-        "TRUNCATE audit_logs, user_sessions, invitations, match_events, match_statistics, matches,"
-        " competition_participants, competition_seasons, competitions, scout_specializations,"
-        " scout_profiles, player_media, player_career_history,"
-        " player_positions, team_players, teams, players, clubs, organization_members,"
-        " organizations, users CASCADE"
-    )
+    conn.cursor().execute("TRUNCATE " + ", ".join(TABLES_TO_CLEAN) + " CASCADE")
     conn.close()
 
 

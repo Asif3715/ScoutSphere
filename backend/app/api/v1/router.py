@@ -1,14 +1,17 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    assignments,
     auth,
     clubs,
     competitions,
     health,
     matches,
+    notifications,
     organizations,
     platform,
     players,
+    reports,
     scouts,
     teams,
 )
@@ -24,3 +27,6 @@ api_router.include_router(teams.router)
 api_router.include_router(scouts.router)
 api_router.include_router(competitions.router)
 api_router.include_router(matches.router)
+api_router.include_router(notifications.router)
+api_router.include_router(assignments.router)
+api_router.include_router(reports.router)

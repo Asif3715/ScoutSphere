@@ -116,3 +116,86 @@ async def match_setup(client, email="own@x.com", org_name="Alpha FC"):
     season = await make_season(client, h, comp)
     await add_clubs(client, h, season, c1, c2)
     return token, org, h, c1, c2, comp, season
+
+
+# ---- scouting workflow -----------------------------------------------------------------
+from datetime import UTC, datetime  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+
+
+def in_days(days: float) -> str:
+    return (datetime.now(UTC) + timedelta(days=days)).isoformat()
+
+
+async def scouting_setup(client) -> SimpleNamespace:
+    """Org with an owner, recruitment manager, scout (with profile), coach, a player and a match."""
+    token, org, h, c1, c2, comp, season = await match_setup(client)
+    rm_t = await add_role_member(client, org, "rm@x.com", "recruitment_manager")
+    scout_t = await add_role_member(client, org, "scout@x.com", "scout")
+    coach_t = await add_role_member(client, org, "coach@x.com", "coach")
+    r = await client.post(f"{API}/scouts", json={"positions": ["CM"]}, headers=hdr(scout_t, org))
+    assert r.status_code == 201, r.text
+    player = await make_player(client, token, org, "Target Player", 20)
+    match = await make_match(client, h, season, c1, c2)
+    return SimpleNamespace(
+        org=org, owner_t=token, owner_h=h, rm_t=rm_t, rm_h=hdr(rm_t, org), scout_t=scout_t,
+        scout_h=hdr(scout_t, org), coach_t=coach_t, coach_h=hdr(coach_t, org),
+        scout_id=r.json()["id"], player=player, match=match, comp=comp, season=season, c1=c1, c2=c2,
+    )  # fmt: skip
+
+
+async def make_assignment(
+    client, s, target="match", *, headers=None, assign_now=True, **kw
+) -> dict:
+    target_id = {"match": s.match["id"], "player": s.player["id"], "competition": s.comp["id"]}[
+        target
+    ]
+    body = {
+        "scout_id": s.scout_id, "target_type": target, "target_id": target_id,
+        "title": f"Watch the {target}", "deadline": in_days(3), "assign_now": assign_now, **kw,
+    }  # fmt: skip
+    r = await client.post(f"{API}/assignments", json=body, headers=headers or s.rm_h)
+    assert r.status_code == 201, r.text
+    return r.json()
+
+
+async def move(client, headers, assignment, to, note=None):
+    body = {"to": to, **({"note": note} if note else {})}
+    return await client.post(
+        f"{API}/assignments/{assignment['id']}/transition", json=body, headers=headers
+    )
+
+
+def full_ratings() -> dict:
+    return {"passing": 8, "ball_control": 7, "dribbling": 6, "speed": 7, "positioning": 8}
+
+
+def report_body(s, **kw) -> dict:
+    return {
+        "player_id": s.player["id"], "observed_on": datetime.now(UTC).date().isoformat(),
+        "recommendation": "recommend", "general_observations": "Calm on the ball.",
+        "strengths": "Passing range", "ratings": full_ratings(), **kw,
+    }  # fmt: skip
+
+
+async def make_report(client, s, headers=None, **kw) -> dict:
+    r = await client.post(
+        f"{API}/scouting-reports", json=report_body(s, **kw), headers=headers or s.scout_h
+    )
+    assert r.status_code == 201, r.text
+    return r.json()
+
+
+async def unread(client, token) -> int:
+    r = await client.get(
+        f"{API}/notifications/unread-count", headers={"Authorization": f"Bearer {token}"}
+    )
+    return r.json()["unread"]
+
+
+async def notes(client, token, **params) -> list[dict]:
+    r = await client.get(
+        f"{API}/notifications", params=params, headers={"Authorization": f"Bearer {token}"}
+    )
+    assert r.status_code == 200, r.text
+    return r.json()["items"]
