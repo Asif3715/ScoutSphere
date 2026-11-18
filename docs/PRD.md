@@ -35,6 +35,8 @@ This section was added after reviewing the original blueprint. Where it conflict
 - **Competitions and matches (Phase 4):** use the same global-or-private model as clubs. Platform admins maintain *global* competitions and matches; organizations may also create private ones. A private match may sit inside a global competition. Matches must be between clubs registered in the season, so relationships stay consistent.
 - **Scout profiles:** belong to organization members (a person can have a different profile in each organization). The directory lists only active members with active profiles by default.
 
+- **Assignments and reports (Phase 5):** assignment status changes are role-restricted (see API_CONVENTIONS); a report may exist without an assignment; reviewers cannot review their own reports; each submission freezes an immutable version. Notifications are in-app only and delivered by polling for now. Real-time WebSockets and a background worker are deferred, and deadline reminders run as an idempotent CLI job until a worker exists.
+
 ## 0.3 Authentication details
 
 - Argon2id password hashing. Short-lived access JWT (about 15 min) plus rotating, revocable refresh tokens stored hashed in `user_sessions`. Refresh token in an `httpOnly`, `Secure`, `SameSite` cookie; access token held in memory by the frontend.

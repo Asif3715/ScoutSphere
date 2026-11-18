@@ -90,5 +90,39 @@ New error codes: `possible_duplicate`, `minor_cannot_be_public`, `player_in_squa
 
 New error codes: `scout_exists`, `not_a_member`, `competition_exists`, `season_exists`, `already_participant`, `participant_has_matches`, `season_has_matches`, `club_not_in_season`, `invalid_season`, `invalid_transition`, `scores_required`, `scores_incomplete`, `scores_not_allowed`, `match_not_started`, `match_played`, `invalid_possession`, `player_not_allowed`.
 
+## Phase 5 endpoints (header-scoped with `X-Organization-Id`, except notifications)
+
+**Assignments** - permissions are enforced inside the service (shared with the future AI agent).
+
+| Endpoint | Who |
+|---|---|
+| `GET /assignments` (`status, scout_id, target_type, overdue, mine`) | managers (`assignments:manage`) see all; others see only non-draft assignments given to them |
+| `GET /assignments/summary` | counts per status, overdue, due within 48h (same visibility) |
+| `POST /assignments` | managers. `assign_now=true` creates and sends in one step. Target is a match, competition or player the organization can see; the scout must be an active member with an active profile; the deadline must be in the future |
+| `GET/PATCH /assignments/{id}` | detail with history, reports and `allowed_transitions` for the caller |
+| `POST /assignments/{id}/transition` `{to, note}` | see workflow |
+
+Workflow (who can move): `draft -> assigned | cancelled` (manager); `assigned -> accepted` (scout) or `cancelled` (manager); `accepted -> in_progress` (scout, automatic when the first report is started) or `cancelled`; `in_progress -> submitted` (scout; needs at least one report and none left in draft/revision) or `cancelled`; `submitted -> under_review | in_progress` (manager; returning needs a note); `under_review -> approved | rejected | in_progress` (manager; approval needs every report reviewed and at least one approved; rejecting/returning needs a note). `approved`, `rejected` and `cancelled` are final. Every change is written to the append-only history.
+
+**Scouting reports** (`/scouting-reports`)
+
+| Endpoint | Who |
+|---|---|
+| `GET /scouting-reports` (`status, player_id, scout_id, match_id, assignment_id, recommendation, mine`) | reviewers (`reports:review`) see all; writers see their own; readers (`reports:read`) see approved reports |
+| `POST /scouting-reports` | scouts with an active profile (`reports:write`); optional `assignment_id` must be yours and accepted/in progress, and match its target |
+| `GET /scouting-reports/{id}`, `GET .../versions/{n}` | visible reports only |
+| `PATCH /scouting-reports/{id}`, `DELETE` | the author, while draft or revision requested (delete: never-submitted drafts only). Ratings merge; a `null` value removes one |
+| `POST /scouting-reports/{id}/submit` | the author. Needs at least 3 ratings, a recommendation and general observations. Each submission stores an immutable version snapshot |
+| `POST /scouting-reports/{id}/review` `{decision, comment}` | reviewers other than the author. `approved`, `revision_requested` or `rejected`; a comment is required unless approving. A revision request re-opens a submitted assignment |
+
+20 rating attributes in four groups (technical, physical, tactical, mental), each 1-10. Ratings are subjective and stay separate from objective match statistics.
+
+**Notifications** (`/notifications`, user-level: no organization header needed)
+`GET /notifications` (`unread`, paging, newest first), `GET /notifications/unread-count`, `POST /notifications/{id}/read`, `POST /notifications/read-all`, `GET|PUT /notifications/preferences`. Notifications are private to their user; someone else's id returns 404. Types: assignment assigned/cancelled/accepted/submitted/approved/rejected/returned/deadline, report submitted/approved/rejected/revision requested. Users can switch any type off.
+
+Deadline reminders run via `uv run python -m app.cli send-deadline-reminders` (idempotent; schedule it hourly). Delivery to the browser is by polling every 30 seconds; WebSockets and a Celery worker are deferred until needed.
+
+New error codes: `invalid_scout`, `invalid_target`, `deadline_in_past`, `not_editable`, `scout_locked`, `no_reports`, `reports_incomplete`, `reports_not_reviewed`, `note_required`, `scout_profile_required`, `invalid_assignment`, `assignment_not_open`, `assignment_mismatch`, `incomplete_report` (details list what is missing), `comment_required`, `not_submitted`, `cannot_review_own`, `has_history`.
+
 ## Planned (later phases)
 Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.

@@ -192,7 +192,12 @@ export default function MembersPage() {
         <>
           <Card className="max-w-xl space-y-3">
             <h2 className="font-semibold">Invite someone</h2>
-            <form onSubmit={invite} className="space-y-3" noValidate>
+            <form
+              method="post"
+              onSubmit={invite}
+              className="space-y-3"
+              noValidate
+            >
               <Field
                 label="Email"
                 type="email"

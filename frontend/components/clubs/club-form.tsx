@@ -59,7 +59,12 @@ export function ClubForm({
   });
 
   return (
-    <form onSubmit={submit} className="max-w-xl space-y-4" noValidate>
+    <form
+      method="post"
+      onSubmit={submit}
+      className="max-w-xl space-y-4"
+      noValidate
+    >
       <Field
         label="Club name"
         error={errors.name?.message}

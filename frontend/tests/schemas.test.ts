@@ -328,3 +328,106 @@ describe("matchSchema / toIsoUtc / stats", () => {
     expect(statsSideSchema.safeParse({ corners: "x" }).success).toBe(false);
   });
 });
+
+import {
+  assignmentPayload,
+  assignmentSchema,
+  missingForSubmit,
+  reportPayload,
+  reportSchema,
+  reviewSchema,
+} from "@/lib/schemas";
+
+describe("assignmentSchema / payload", () => {
+  const base = {
+    scout_id: "s",
+    target_type: "match" as const,
+    target_id: "m",
+    title: "Watch the derby",
+  };
+  it("validates required fields and a future deadline", () => {
+    expect(assignmentSchema.safeParse(base).success).toBe(true);
+    expect(assignmentSchema.safeParse({ ...base, title: "ab" }).success).toBe(
+      false,
+    );
+    expect(assignmentSchema.safeParse({ ...base, scout_id: "" }).success).toBe(
+      false,
+    );
+    expect(
+      assignmentSchema.safeParse({ ...base, deadline: "2001-01-01T10:00" })
+        .success,
+    ).toBe(false);
+    const future = new Date(Date.now() + 86_400_000).toISOString().slice(0, 16);
+    expect(
+      assignmentSchema.safeParse({ ...base, deadline: future }).success,
+    ).toBe(true);
+  });
+  it("builds the payload", () => {
+    expect(
+      assignmentPayload({ ...base, instructions: " ", assign_now: true }),
+    ).toMatchObject({
+      instructions: null,
+      deadline: null,
+      assign_now: true,
+    });
+  });
+});
+
+describe("reportSchema / payload / missingForSubmit", () => {
+  const base = { player_id: "p", observed_on: "2025-01-01", ratings: {} };
+  it("validates ratings and dates", () => {
+    expect(reportSchema.safeParse(base).success).toBe(true);
+    expect(
+      reportSchema.safeParse({ ...base, ratings: { passing: "11" } }).success,
+    ).toBe(false);
+    expect(
+      reportSchema.safeParse({ ...base, ratings: { passing: "0" } }).success,
+    ).toBe(false);
+    expect(
+      reportSchema.safeParse({ ...base, ratings: { passing: "x" } }).success,
+    ).toBe(false);
+    expect(
+      reportSchema.safeParse({ ...base, observed_on: "2999-01-01" }).success,
+    ).toBe(false);
+  });
+  it("drops blank ratings and converts numbers", () => {
+    const p = reportPayload({
+      ...base,
+      ratings: { passing: "8", speed: "", crossing: "5" },
+      strengths: " ",
+    });
+    expect(p.ratings).toEqual({ passing: 8, crossing: 5 });
+    expect(p.strengths).toBeNull();
+  });
+  it("lists what blocks submission", () => {
+    expect(
+      missingForSubmit({
+        ratings: { a: 1 },
+        recommendation: null,
+        general_observations: " ",
+      }),
+    ).toHaveLength(3);
+    expect(
+      missingForSubmit({
+        ratings: { a: 1, b: 2, c: 3 },
+        recommendation: "recommend",
+        general_observations: "ok",
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("reviewSchema", () => {
+  it("requires a comment unless approving", () => {
+    expect(reviewSchema.safeParse({ decision: "approved" }).success).toBe(true);
+    expect(reviewSchema.safeParse({ decision: "rejected" }).success).toBe(
+      false,
+    );
+    expect(
+      reviewSchema.safeParse({
+        decision: "revision_requested",
+        comment: "More detail",
+      }).success,
+    ).toBe(true);
+  });
+});

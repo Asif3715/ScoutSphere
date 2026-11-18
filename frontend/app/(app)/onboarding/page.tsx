@@ -50,7 +50,7 @@ export default function OnboardingPage() {
         its owner and can invite your team afterwards.
       </p>
       {canCreate ? (
-        <form onSubmit={submit} className="space-y-4" noValidate>
+        <form method="post" onSubmit={submit} className="space-y-4" noValidate>
           <Field
             label="Organization name"
             error={errors.name?.message}

@@ -45,7 +45,7 @@ function RegisterForm() {
 
   return (
     <AuthCard title="Create your account">
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <form method="post" onSubmit={onSubmit} className="space-y-4" noValidate>
         <Field
           label="Full name"
           autoComplete="name"

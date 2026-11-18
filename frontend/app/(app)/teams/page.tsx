@@ -100,7 +100,12 @@ export default function TeamsPage() {
       {manage && (
         <Card className="max-w-xl space-y-3">
           <h2 className="font-semibold">Create team</h2>
-          <form onSubmit={create} className="space-y-3" noValidate>
+          <form
+            method="post"
+            onSubmit={create}
+            className="space-y-3"
+            noValidate
+          >
             <div className="space-y-1">
               <label htmlFor="club_id" className="block text-sm font-medium">
                 Club

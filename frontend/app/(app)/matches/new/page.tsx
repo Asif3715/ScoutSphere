@@ -83,7 +83,12 @@ export default function NewMatchPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Add match</h1>
-      <form onSubmit={submit} className="max-w-xl space-y-4" noValidate>
+      <form
+        method="post"
+        onSubmit={submit}
+        className="max-w-xl space-y-4"
+        noValidate
+      >
         <div className="space-y-1">
           <label htmlFor="competition" className="block text-sm font-medium">
             Competition

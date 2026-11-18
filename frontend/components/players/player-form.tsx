@@ -79,7 +79,12 @@ export function PlayerForm({
   const submit = handleSubmit((v) => send(v, false));
 
   return (
-    <form onSubmit={submit} className="max-w-2xl space-y-4" noValidate>
+    <form
+      method="post"
+      onSubmit={submit}
+      className="max-w-2xl space-y-4"
+      noValidate
+    >
       {duplicates && (
         <Card className="space-y-2 border-amber-400 bg-amber-50 text-amber-950">
           <p className="font-semibold">

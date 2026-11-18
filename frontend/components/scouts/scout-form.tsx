@@ -62,7 +62,12 @@ export function ScoutForm({
   });
 
   return (
-    <form onSubmit={submit} className="max-w-xl space-y-4" noValidate>
+    <form
+      method="post"
+      onSubmit={submit}
+      className="max-w-xl space-y-4"
+      noValidate
+    >
       {members && (
         <div className="space-y-1">
           <label htmlFor="user_id" className="block text-sm font-medium">

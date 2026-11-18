@@ -306,3 +306,109 @@ export const statsSideSchema = z
         message: "Cannot exceed shots",
       });
   });
+
+// ---- assignments, reports -------------------------------------------------------------
+export const assignmentSchema = z.object({
+  scout_id: z.string().min(1, "Choose a scout"),
+  target_type: z.enum(["match", "competition", "player"]),
+  target_id: z.string().min(1, "Choose a target"),
+  title: z
+    .string()
+    .trim()
+    .min(3, "Title must be at least 3 characters")
+    .max(200),
+  instructions: z.string().max(5000).optional(),
+  criteria: z.string().max(3000).optional(),
+  deadline: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || new Date(v).getTime() > Date.now(),
+      "The deadline must be in the future",
+    ),
+  assign_now: z.boolean().optional(),
+});
+export type AssignmentValues = z.infer<typeof assignmentSchema>;
+
+export function assignmentPayload(v: AssignmentValues) {
+  return {
+    scout_id: v.scout_id,
+    target_type: v.target_type,
+    target_id: v.target_id,
+    title: v.title.trim(),
+    instructions: v.instructions?.trim() ? v.instructions.trim() : null,
+    criteria: v.criteria?.trim() ? v.criteria.trim() : null,
+    deadline: v.deadline ? toIsoUtc(v.deadline) : null,
+    assign_now: !!v.assign_now,
+  };
+}
+
+const rating = z
+  .string()
+  .refine(
+    (v) => v === "" || (/^\d+$/.test(v) && +v >= 1 && +v <= 10),
+    "1 to 10",
+  )
+  .optional();
+
+export const reportSchema = z.object({
+  player_id: z.string().min(1, "Choose a player"),
+  match_id: z.string().optional(),
+  observed_on: z
+    .string()
+    .min(1, "Date observed is required")
+    .refine(
+      (v) => v <= new Date().toISOString().slice(0, 10),
+      "Cannot be in the future",
+    ),
+  position_observed: z.string().optional(),
+  recommendation: z.string().optional(),
+  strengths: z.string().max(5000).optional(),
+  weaknesses: z.string().max(5000).optional(),
+  development_areas: z.string().max(5000).optional(),
+  general_observations: z.string().max(5000).optional(),
+  ratings: z.record(z.string(), rating),
+});
+export type ReportValues = z.infer<typeof reportSchema>;
+
+export function reportPayload(v: ReportValues) {
+  const blank = (s?: string) => (s && s.trim() !== "" ? s.trim() : null);
+  const ratings: Record<string, number> = {};
+  for (const [k, val] of Object.entries(v.ratings ?? {}))
+    if (val && val !== "") ratings[k] = Number(val);
+  return {
+    observed_on: v.observed_on,
+    position_observed: blank(v.position_observed),
+    recommendation: blank(v.recommendation),
+    strengths: blank(v.strengths),
+    weaknesses: blank(v.weaknesses),
+    development_areas: blank(v.development_areas),
+    general_observations: blank(v.general_observations),
+    ratings,
+  };
+}
+
+/** What is still missing before a report can be submitted (mirrors the backend rules). */
+export function missingForSubmit(v: {
+  ratings: Record<string, number>;
+  recommendation: string | null;
+  general_observations: string | null;
+}) {
+  const missing: string[] = [];
+  if (Object.keys(v.ratings).length < 3) missing.push("at least 3 ratings");
+  if (!v.recommendation) missing.push("a recommendation");
+  if (!(v.general_observations ?? "").trim())
+    missing.push("general observations");
+  return missing;
+}
+
+export const reviewSchema = z
+  .object({
+    decision: z.enum(["approved", "revision_requested", "rejected"]),
+    comment: z.string().max(3000).optional(),
+  })
+  .refine((v) => v.decision === "approved" || !!v.comment?.trim(), {
+    path: ["comment"],
+    message: "Explain your decision to the scout",
+  });
+export type ReviewValues = z.infer<typeof reviewSchema>;
