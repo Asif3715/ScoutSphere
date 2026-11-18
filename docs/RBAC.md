@@ -32,6 +32,11 @@ Platform: `super_admin` manages organizations, platform users, audit logs and ag
 - `matches:read` (all organization roles), `matches:manage` (owner, admin). Covers competitions, seasons, participants, matches, events and statistics.
 - Global competitions/matches are managed through the platform permission `platform:orgs_manage` (super admin only; Platform Support cannot).
 
+## Phase 5 visibility rules
+- **Assignments:** managers (`assignments:manage`: owner, admin, recruitment manager) see and move all of them. Everyone else sees only the non-draft assignments assigned to them; coaches therefore see none.
+- **Reports:** `reports:review` (owner, admin, recruitment manager) sees every report and may review any report except their own; `reports:write` (scouts, owner, admin) sees and edits their own; `reports:read` (also coaches) sees approved reports of the organization. Scouts can therefore read colleagues' *approved* reports.
+- **Notifications:** only ever visible to the user they were sent to.
+
 ## Rules
 1. Authorize in the service layer, on every operation.
 2. Org-scoped queries always include `organization_id` from `AuthContext`, never from client input alone.

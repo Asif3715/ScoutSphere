@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { useAuth } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/types";
 
@@ -14,6 +15,12 @@ const NAV = [
   { href: "/teams", label: "Teams", permission: "clubs:read" },
   { href: "/players", label: "Players", permission: "players:read" },
   { href: "/scouts", label: "Scouts", permission: "scouts:read" },
+  {
+    href: "/assignments",
+    label: "Assignments",
+    permission: "assignments:read",
+  },
+  { href: "/reports", label: "Reports", permission: "reports:read" },
   { href: "/competitions", label: "Competitions", permission: "matches:read" },
   { href: "/matches", label: "Matches", permission: "matches:read" },
   { href: "/members", label: "Members", permission: "members:read" },
@@ -89,6 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <NotificationBell />
             <span className="opacity-70">{user?.full_name}</span>
             <button
               onClick={async () => {

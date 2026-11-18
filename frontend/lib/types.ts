@@ -323,3 +323,139 @@ export type MatchDetail = MatchSummary & {
   events: MatchEvent[];
   statistics: { home: StatsSide | null; away: StatsSide | null };
 };
+
+// ---- assignments, reports, notifications ---------------------------------------------
+export const RATING_GROUPS: Record<string, string[]> = {
+  technical: [
+    "passing",
+    "ball_control",
+    "dribbling",
+    "shooting",
+    "first_touch",
+    "crossing",
+  ],
+  physical: ["speed", "acceleration", "strength", "stamina", "agility"],
+  tactical: [
+    "positioning",
+    "decision_making",
+    "awareness",
+    "defensive_contribution",
+    "movement",
+  ],
+  mental: ["work_rate", "discipline", "confidence", "leadership"],
+};
+export const RECOMMENDATIONS = [
+  "strongly_recommend",
+  "recommend",
+  "monitor",
+  "not_recommended",
+] as const;
+export const ASSIGNMENT_STATUSES = [
+  "draft",
+  "assigned",
+  "accepted",
+  "in_progress",
+  "submitted",
+  "under_review",
+  "approved",
+  "rejected",
+  "cancelled",
+] as const;
+export const REPORT_STATUSES = [
+  "draft",
+  "submitted",
+  "revision_requested",
+  "approved",
+  "rejected",
+] as const;
+
+export const label = (v: string) => v.replace(/_/g, " ");
+
+export type AssignmentSummary = {
+  id: string;
+  title: string;
+  status: string;
+  target_type: string;
+  target_id: string;
+  target_label: string;
+  scout_id: string;
+  scout_name: string;
+  deadline: string | null;
+  is_overdue: boolean;
+  instructions: string | null;
+  criteria: string | null;
+  report_count: number;
+  created_at: string;
+};
+export type AssignmentDetail = AssignmentSummary & {
+  history: {
+    from_status: string | null;
+    to_status: string;
+    actor_name: string | null;
+    note: string | null;
+    created_at: string;
+  }[];
+  reports: {
+    id: string;
+    player_name: string;
+    status: string;
+    recommendation: string | null;
+  }[];
+  allowed_transitions: string[];
+  is_mine: boolean;
+};
+export type AssignmentStats = {
+  counts: Record<string, number>;
+  overdue: number;
+  due_soon: number;
+};
+
+export type ReportSummary = {
+  id: string;
+  status: string;
+  player_id: string;
+  player_name: string;
+  scout_id: string;
+  scout_name: string;
+  match_label: string | null;
+  observed_on: string;
+  recommendation: string | null;
+  assignment_id: string | null;
+  assignment_title: string | null;
+  current_version: number;
+  submitted_at: string | null;
+};
+export type ReportDetail = ReportSummary & {
+  match_id: string | null;
+  club_id: string | null;
+  club_name: string | null;
+  position_observed: string | null;
+  strengths: string | null;
+  weaknesses: string | null;
+  development_areas: string | null;
+  general_observations: string | null;
+  ratings: Record<string, number>;
+  versions: { version: number; created_at: string }[];
+  reviews: {
+    version: number;
+    decision: string;
+    comment: string | null;
+    reviewer_name: string | null;
+    created_at: string;
+  }[];
+  is_mine: boolean;
+  can_edit: boolean;
+  can_review: boolean;
+  created_at: string;
+};
+
+export type AppNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link_path: string | null;
+  organization_id: string | null;
+  read: boolean;
+  created_at: string;
+};

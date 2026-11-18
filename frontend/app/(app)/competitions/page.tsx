@@ -122,7 +122,12 @@ export default function CompetitionsPage() {
       {can("matches:manage") && (
         <Card className="max-w-xl space-y-3">
           <h2 className="font-semibold">Create competition</h2>
-          <form onSubmit={create} className="space-y-3" noValidate>
+          <form
+            method="post"
+            onSubmit={create}
+            className="space-y-3"
+            noValidate
+          >
             <Field
               label="Name"
               error={errors.name?.message}

@@ -49,3 +49,9 @@ Detailed column definitions are written with each phase's models and kept here i
 - `competitions` (`organization_id` NULL = global), unique active name per scope via a `coalesce(organization_id, zero-uuid), lower(name)` index. `competition_seasons` (unique name per competition, `end_date >= start_date`), `competition_participants` (unique club per season).
 - `matches` (global when `organization_id` is NULL): CHECKs for different clubs, valid status, paired non-negative scores, and finished-implies-scored. `match_events` (type, minute 0-150, optional player), `match_statistics` (one row per club per match; possession 0-100, shots on target <= shots).
 - Deferred: scout assignments and assigned competitions/matches (Phase 5), match-level player statistics (advanced statistics, later).
+
+**Phase 5 (migration 0006, assignments, reports, notifications):**
+- `scout_assignments`: exactly one target (match, competition or player) enforced by a CHECK; status CHECK; `deadline`, `reminder_sent_at`. `assignment_history` is append-only with a database-generated `seq` so ordering never depends on timestamps (rows written in one transaction share `created_at`).
+- `scouting_reports` (subjective, org-private; optional assignment, match, club), `scouting_report_ratings` (20 attributes, 1-10 by CHECK), `scouting_report_versions` (immutable JSONB snapshot per submission), `scouting_report_reviews` (decision, comment, version reviewed).
+- `notifications` (per user, `seq` ordering, `read_at`) and `notification_preferences` (per user and type).
+- Deferred: configurable rating scales, WebSocket push, email delivery.
