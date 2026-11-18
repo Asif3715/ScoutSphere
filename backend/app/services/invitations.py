@@ -144,8 +144,9 @@ async def revoke_invitation(db: AsyncSession, ctx: AuthContext, invitation_id: u
     await db.commit()
 
 
-async def _find_usable(db: AsyncSession, token: str) -> Invitation:
-    inv = await db.scalar(select(Invitation).where(Invitation.token_hash == _hash(token)))
+async def _find_usable(db: AsyncSession, token: str, *, lock: bool = False) -> Invitation:
+    stmt = select(Invitation).where(Invitation.token_hash == _hash(token))
+    inv = await db.scalar(stmt.with_for_update() if lock else stmt)
     if inv is None or inv.status != "pending" or inv.expires_at <= _now():
         raise INVALID_INVITATION
     return inv
@@ -161,7 +162,8 @@ async def preview_invitation(db: AsyncSession, token: str) -> InvitationPreview:
 
 
 async def accept_invitation(db: AsyncSession, user: User, token: str) -> Organization:
-    inv = await _find_usable(db, token)
+    # Row lock: concurrent accepts of one invitation are serialized, the loser sees it used.
+    inv = await _find_usable(db, token, lock=True)
     if user.email.lower() != inv.email.lower():
         raise AppError(
             403, "email_mismatch", "This invitation was sent to a different email address"
@@ -181,11 +183,17 @@ async def accept_invitation(db: AsyncSession, user: User, token: str) -> Organiz
     if membership is not None and membership.status == "active":
         raise AppError(409, "already_member", "You are already a member of this organization")
     if membership is None:
-        db.add(
-            OrganizationMember(
-                organization_id=inv.organization_id, user_id=user.id, role_id=inv.role_id
-            )
-        )
+        try:
+            async with db.begin_nested():
+                db.add(
+                    OrganizationMember(
+                        organization_id=inv.organization_id, user_id=user.id, role_id=inv.role_id
+                    )
+                )
+        except IntegrityError:  # joined through another route a moment ago
+            raise AppError(
+                409, "already_member", "You are already a member of this organization"
+            ) from None
     else:  # previously removed or suspended: reactivate with the invited role
         membership.status, membership.role_id = "active", inv.role_id
 

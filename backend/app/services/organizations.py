@@ -2,6 +2,7 @@ import re
 import uuid
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
@@ -40,18 +41,26 @@ async def create_organization(
             403, "account_type_not_allowed", "Only club staff accounts can create organizations"
         )
     base = slugify(data.name)
-    slug = base
-    while await db.scalar(select(Organization.id).where(Organization.slug == slug)):
-        slug = f"{base}-{uuid.uuid4().hex[:4]}"
-
-    org = Organization(
-        name=data.name.strip(),
-        slug=slug,
-        description=data.description,
-        created_by_user_id=user.id,
-    )
-    db.add(org)
-    await db.flush()
+    org: Organization | None = None
+    for attempt in range(8):
+        # Two requests can pick the same free slug at the same moment; the unique constraint
+        # decides, and the loser simply retries with a fresh suffix (inside a savepoint, so the
+        # rest of the transaction survives).
+        slug = base if attempt == 0 else f"{base}-{uuid.uuid4().hex[:6]}"
+        candidate = Organization(
+            name=data.name.strip(), slug=slug, description=data.description,
+            created_by_user_id=user.id,
+        )  # fmt: skip
+        try:
+            async with db.begin_nested():
+                db.add(candidate)
+                await db.flush()
+        except IntegrityError:
+            continue
+        org = candidate
+        break
+    if org is None:
+        raise AppError(503, "slug_unavailable", "Could not allocate a unique organization address")
     owner = await get_role(db, "club_owner")
     db.add(OrganizationMember(organization_id=org.id, user_id=user.id, role_id=owner.id))
     await record_audit(

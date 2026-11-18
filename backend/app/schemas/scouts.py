@@ -4,6 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.base import RequestModel
 from app.schemas.players import Position
 
 AgeGroup = Literal["u15", "u16", "u17", "u18", "u19", "u21", "u23", "senior"]
@@ -13,7 +14,7 @@ def _dedupe(v: list) -> list:
     return list(dict.fromkeys(v))
 
 
-class ScoutBase(BaseModel):
+class ScoutBase(RequestModel):
     bio: str | None = Field(default=None, max_length=3000)
     experience_years: int | None = Field(default=None, ge=0, le=60)
     positions: list[Position] = Field(default_factory=list, max_length=15)
@@ -38,7 +39,7 @@ class ScoutCreate(ScoutBase):
     user_id: uuid.UUID | None = None  # default: yourself
 
 
-class ScoutUpdate(BaseModel):
+class ScoutUpdate(RequestModel):
     bio: str | None = Field(default=None, max_length=3000)
     experience_years: int | None = Field(default=None, ge=0, le=60)
     positions: list[Position] | None = Field(default=None, max_length=15)

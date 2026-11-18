@@ -4,22 +4,24 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.schemas.base import RequestModel
+
 CompetitionType = Literal["league", "cup", "friendly", "youth_league", "international", "other"]
 
 
-class CompetitionCreate(BaseModel):
+class CompetitionCreate(RequestModel):
     name: str = Field(min_length=2, max_length=200)
     country: str | None = Field(default=None, max_length=100)
     competition_type: CompetitionType = "league"
 
 
-class CompetitionUpdate(BaseModel):
+class CompetitionUpdate(RequestModel):
     name: str | None = Field(default=None, min_length=2, max_length=200)
     country: str | None = Field(default=None, max_length=100)
     competition_type: CompetitionType | None = None
 
 
-class SeasonCreate(BaseModel):
+class SeasonCreate(RequestModel):
     name: str = Field(min_length=1, max_length=50)
     start_date: date
     end_date: date
@@ -31,13 +33,13 @@ class SeasonCreate(BaseModel):
         return self
 
 
-class SeasonUpdate(BaseModel):
+class SeasonUpdate(RequestModel):
     name: str | None = Field(default=None, min_length=1, max_length=50)
     start_date: date | None = None
     end_date: date | None = None
 
 
-class ParticipantAdd(BaseModel):
+class ParticipantAdd(RequestModel):
     club_id: uuid.UUID
 
 

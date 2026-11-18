@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { useAuth } from "@/lib/auth";
@@ -31,10 +32,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const active = memberships.find((m) => m.organization_id === activeOrgId);
+  // On phones the sidebar is a slide-over drawer instead of a permanent 224px column.
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r border-slate-200 p-4 dark:border-slate-800">
+      {menuOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+      <aside
+        id="main-nav"
+        className={`w-56 shrink-0 border-r border-slate-200 bg-background p-4 dark:border-slate-800 ${
+          menuOpen
+            ? "fixed inset-y-0 left-0 z-40 block overflow-y-auto"
+            : "hidden"
+        } md:static md:z-auto md:block`}
+      >
         <Link href="/dashboard" className="block text-lg font-bold">
           ScoutSphere
         </Link>
@@ -47,6 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setMenuOpen(false)}
                   aria-current={current ? "page" : undefined}
                   className={`block rounded-md px-3 py-2 text-sm ${
                     current
@@ -63,8 +81,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-3 dark:border-slate-800">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 md:px-6 dark:border-slate-800">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="rounded-md border border-slate-300 px-3 py-1 text-sm md:hidden"
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="main-nav"
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              ☰
+            </button>
             {memberships.length > 0 ? (
               <>
                 <label htmlFor="org-switch" className="sr-only">
@@ -97,7 +125,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-3 text-sm">
             <NotificationBell />
-            <span className="opacity-70">{user?.full_name}</span>
+            <span className="hidden opacity-70 sm:inline">
+              {user?.full_name}
+            </span>
             <button
               onClick={async () => {
                 await logout();
@@ -109,7 +139,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="min-w-0 flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

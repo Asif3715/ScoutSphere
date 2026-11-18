@@ -19,6 +19,13 @@ Every error has the same shape:
 | 404 | `not_found` (also returned for resources of other organizations) |
 | 422 | `validation_error` |
 
+## Input limits and hardening
+- Request bodies are capped at 1 MiB (`413 payload_too_large`). NUL characters in a body, query string or path are rejected (`422 invalid_characters`) because PostgreSQL cannot store them. `page` is capped at 1,000,000.
+- Surrounding whitespace is trimmed from every text field *before* validation, so a name of `"   "` is rejected rather than stored blank. Passwords are never trimmed.
+- Any unexpected server fault returns the normal JSON error shape (`500 internal_error`) with no internals; data the database cannot store returns `422 invalid_input`.
+- Every API response carries `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` and `Cache-Control: no-store` (plus HSTS when `COOKIE_SECURE=true`).
+- Refresh tokens rotate on every use. A rotated token presented again within 10 seconds, while the login still has a live session, is treated as two browser tabs racing and gets a fresh session; any later replay, or any replay after logout, revokes the whole login.
+
 ## Authentication
 - Access token: JWT (HS256, 15 min), sent as `Authorization: Bearer <token>`. Held in memory by the frontend.
 - Refresh token: opaque, rotated on every use, stored hashed server-side, delivered as an `httpOnly` `SameSite=Lax` cookie scoped to `/api/v1/auth`. Re-using a rotated token revokes the whole token family.
@@ -121,6 +128,8 @@ Workflow (who can move): `draft -> assigned | cancelled` (manager); `assigned ->
 `GET /notifications` (`unread`, paging, newest first), `GET /notifications/unread-count`, `POST /notifications/{id}/read`, `POST /notifications/read-all`, `GET|PUT /notifications/preferences`. Notifications are private to their user; someone else's id returns 404. Types: assignment assigned/cancelled/accepted/submitted/approved/rejected/returned/deadline, report submitted/approved/rejected/revision requested. Users can switch any type off.
 
 Deadline reminders run via `uv run python -m app.cli send-deadline-reminders` (idempotent; schedule it hourly). Delivery to the browser is by polling every 30 seconds; WebSockets and a Celery worker are deferred until needed.
+
+New error codes (QA round): `invalid_characters`, `payload_too_large`, `invalid_input`, `internal_error`, `match_in_use`, `slug_unavailable`.
 
 New error codes: `invalid_scout`, `invalid_target`, `deadline_in_past`, `not_editable`, `scout_locked`, `no_reports`, `reports_incomplete`, `reports_not_reviewed`, `note_required`, `scout_profile_required`, `invalid_assignment`, `assignment_not_open`, `assignment_mismatch`, `incomplete_report` (details list what is missing), `comment_required`, `not_submitted`, `cannot_review_own`, `has_history`.
 

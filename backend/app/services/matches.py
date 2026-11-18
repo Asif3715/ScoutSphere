@@ -261,7 +261,16 @@ async def delete_match(db: AsyncSession, ctx: AuthContext, match_id: uuid.UUID) 
     m = await _manageable(db, ctx, match_id)
     if m.status in ("live", "finished"):
         raise AppError(409, "match_played", "Played matches cannot be deleted")
-    await db.delete(m)
+    try:
+        async with db.begin_nested():
+            await db.delete(m)
+            await db.flush()
+    except IntegrityError:
+        raise AppError(
+            409,
+            "match_in_use",
+            "This match is used by an assignment or a scouting report and cannot be deleted",
+        ) from None
     await record_audit(
         db, action="match.delete", outcome="success", actor_user_id=ctx.user_id,
         organization_id=ctx.organization_id, target_type="match", target_id=str(match_id),
