@@ -5,14 +5,52 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
-import { ScoreCell } from "@/components/matches/score";
-import { Button, Empty, ErrorText, Pagination } from "@/components/ui/ui";
+import { StatusBadge } from "@/components/assignments/status-badge";
+import {
+  FilterField,
+  PageHeader,
+  RowLink,
+  SkeletonRows,
+  TableCard,
+  TableMessage,
+} from "@/components/ui/data-table";
+import { Button, Pagination } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
+import { shortDate } from "@/lib/format";
 import { apiFetch } from "@/lib/http";
-import { MATCH_STATUSES, type MatchSummary, type Page } from "@/lib/types";
+import {
+  label,
+  MATCH_STATUSES,
+  type MatchSummary,
+  type Page,
+} from "@/lib/types";
 
-const input =
-  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
+const COLS = 4;
+
+function Fixture({ m }: { m: MatchSummary }) {
+  const played = m.home_score != null;
+  const homeWon = played && m.home_score! > m.away_score!;
+  const awayWon = played && m.away_score! > m.home_score!;
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+      <span className={`truncate text-right ${homeWon ? "font-semibold" : ""}`}>
+        {m.home_club_name}
+      </span>
+      <RowLink
+        href={`/matches/${m.id}`}
+        aria-label={`${m.home_club_name} v ${m.away_club_name}`}
+        className={`min-w-[4.5rem] rounded-[2px] px-2 py-1 text-center font-mono text-sm tabular-nums ${
+          played ? "bg-dugout text-dugout-ink" : "border border-line-strong"
+        }`}
+      >
+        {played ? `${m.home_score} – ${m.away_score}` : "v"}
+      </RowLink>
+      <span className={`truncate ${awayWon ? "font-semibold" : ""}`}>
+        {m.away_club_name}
+      </span>
+    </div>
+  );
+}
 
 function Matches() {
   const { activeOrgId, can } = useAuth();
@@ -22,6 +60,7 @@ function Matches() {
   const [to, setTo] = useState("");
   const [sort, setSort] = useState("kickoff_desc");
   const [page, setPage] = useState(1);
+  const filtered = status !== "" || from !== "" || to !== "";
 
   const { data, error, isLoading } = useQuery({
     queryKey: ["matches", activeOrgId, seasonId, status, from, to, sort, page],
@@ -38,6 +77,7 @@ function Matches() {
       return apiFetch<Page<MatchSummary>>(`/matches?${params}`);
     },
     enabled: !!activeOrgId,
+    placeholderData: (prev) => prev,
   });
   const reset = () => (
     setStatus(""),
@@ -48,122 +88,151 @@ function Matches() {
   );
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Matches</h1>
-        {can("matches:manage") && (
-          <Link href="/matches/new" className="btn btn-primary">
-            Add match
-          </Link>
-        )}
-      </header>
-      {seasonId && (
-        <p className="text-sm">
-          Filtered to one season.{" "}
-          <Link href="/matches" className="text-link underline">
-            Show all matches
-          </Link>
-        </p>
-      )}
-      <section aria-label="Filters" className="flex flex-wrap items-end gap-3">
-        <label className="text-xs">
-          Status
-          <select
-            value={status}
-            onChange={(e) => (setStatus(e.target.value), setPage(1))}
-            className={`${input} block`}
-          >
-            <option value="">Any</option>
-            {MATCH_STATUSES.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs">
-          From
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => (setFrom(e.target.value), setPage(1))}
-            className={`${input} block`}
-          />
-        </label>
-        <label className="text-xs">
-          To
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => (setTo(e.target.value), setPage(1))}
-            className={`${input} block`}
-          />
-        </label>
-        <label className="text-xs">
-          Order
-          <select
-            value={sort}
-            onChange={(e) => (setSort(e.target.value), setPage(1))}
-            className={`${input} block`}
-          >
-            <option value="kickoff_desc">Newest first</option>
-            <option value="kickoff_asc">Oldest first</option>
-          </select>
-        </label>
-        <Button variant="secondary" onClick={reset}>
-          Reset
-        </Button>
-      </section>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Fixtures"
+        title="Matches"
+        meta={
+          seasonId ? (
+            <>
+              Showing one season.{" "}
+              <Link href="/matches" className="text-link underline">
+                Show all matches
+              </Link>
+            </>
+          ) : (
+            "Results and upcoming fixtures across your competitions."
+          )
+        }
+        actions={
+          can("matches:manage") && (
+            <Link href="/matches/new" className="btn btn-primary">
+              + Add match
+            </Link>
+          )
+        }
+      />
 
-      {isLoading && <p aria-busy="true">Loading…</p>}
-      <ErrorText>{error?.message}</ErrorText>
-      {data && data.items.length === 0 && <Empty>No matches found.</Empty>}
-      {data && data.items.length > 0 && (
-        <>
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-line text-xs uppercase opacity-60">
-              <tr>
-                <th className="py-2">Kick-off</th>
-                <th>Match</th>
-                <th>Score</th>
-                <th>Competition</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+      <TableCard
+        toolbar={
+          <>
+            <FilterField label="Status">
+              <select
+                value={status}
+                onChange={(e) => (setStatus(e.target.value), setPage(1))}
+                className="field-input capitalize"
+              >
+                <option value="">Any status</option>
+                {MATCH_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {label(s)}
+                  </option>
+                ))}
+              </select>
+            </FilterField>
+            <FilterField label="From">
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => (setFrom(e.target.value), setPage(1))}
+                className="field-input"
+              />
+            </FilterField>
+            <FilterField label="To">
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => (setTo(e.target.value), setPage(1))}
+                className="field-input"
+              />
+            </FilterField>
+            <FilterField label="Order">
+              <select
+                value={sort}
+                onChange={(e) => (setSort(e.target.value), setPage(1))}
+                className="field-input"
+              >
+                <option value="kickoff_desc">Newest first</option>
+                <option value="kickoff_asc">Oldest first</option>
+              </select>
+            </FilterField>
+            {(filtered || sort !== "kickoff_desc") && (
+              <Button variant="secondary" className="h-9" onClick={reset}>
+                Clear filters
+              </Button>
+            )}
+          </>
+        }
+        footer={
+          data &&
+          data.total > 0 && (
+            <Pagination
+              page={data.page}
+              pageSize={data.page_size}
+              total={data.total}
+              onChange={setPage}
+            />
+          )
+        }
+      >
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th className="w-28">Date</th>
+              <th className="text-center">Fixture</th>
+              <th className="hidden md:table-cell">Competition</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          {isLoading && <SkeletonRows cols={COLS} />}
+          {error && (
+            <TableMessage cols={COLS}>
+              <span className="text-bad">{error.message}</span>
+            </TableMessage>
+          )}
+          {data && data.items.length === 0 && (
+            <TableMessage cols={COLS}>
+              {filtered ? "No matches match these filters." : "No matches yet."}
+            </TableMessage>
+          )}
+          {data && data.items.length > 0 && (
             <tbody>
-              {data.items.map((m) => (
-                <tr key={m.id} className="border-b border-line-soft">
-                  <td className="py-2">
-                    {new Date(m.kickoff_at).toLocaleString()}
-                  </td>
-                  <td>
-                    <Link
-                      href={`/matches/${m.id}`}
-                      className="font-medium text-link hover:underline"
-                    >
-                      {m.home_club_name} v {m.away_club_name}
-                    </Link>
-                    {m.is_global && (
-                      <span className="ml-2 text-xs opacity-50">global</span>
-                    )}
-                  </td>
-                  <td>
-                    <ScoreCell m={m} />
-                  </td>
-                  <td>
-                    {m.competition_name} · {m.season_name}
-                  </td>
-                  <td>{m.status}</td>
-                </tr>
-              ))}
+              {data.items.map((m) => {
+                const ko = new Date(m.kickoff_at);
+                return (
+                  <tr key={m.id}>
+                    <td className="whitespace-nowrap">
+                      <span className="font-medium">
+                        {shortDate(m.kickoff_at)}
+                      </span>
+                      <span className="sub font-mono">
+                        {ko.toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                        {m.round_label ? ` · ${m.round_label}` : ""}
+                      </span>
+                    </td>
+                    <td className="min-w-[18rem]">
+                      <Fixture m={m} />
+                    </td>
+                    <td className="hidden md:table-cell">
+                      {m.competition_name}
+                      <span className="sub">
+                        {m.season_name}
+                        {m.is_global ? " · global" : ""}
+                      </span>
+                    </td>
+                    <td>
+                      <StatusBadge status={m.status} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
-          </table>
-          <Pagination
-            page={data.page}
-            pageSize={data.page_size}
-            total={data.total}
-            onChange={setPage}
-          />
-        </>
-      )}
+          )}
+        </table>
+      </TableCard>
     </div>
   );
 }
