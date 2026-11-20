@@ -97,13 +97,19 @@ export function Pagination({
   onChange: (page: number) => void;
 }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(total, page * pageSize);
   return (
     <nav
-      className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 text-sm"
+      className="pagination flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 text-sm"
       aria-label="Pagination"
     >
-      <span className="eyebrow opacity-70">
-        {total} result{total === 1 ? "" : "s"}
+      <span className="text-xs opacity-70">
+        Showing{" "}
+        <span className="font-mono font-semibold tabular-nums">
+          {from}–{to}
+        </span>{" "}
+        of <span className="font-mono font-semibold tabular-nums">{total}</span>
       </span>
       <div className="flex items-center gap-2">
         <Button

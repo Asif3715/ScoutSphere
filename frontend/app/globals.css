@@ -238,9 +238,10 @@ main details[open] > summary::before {
   transform: rotate(45deg);
 }
 
-/* Wide data tables scroll inside themselves on phones instead of clipping the page. */
+/* Wide data tables scroll inside themselves on phones instead of clipping the page.
+   (.data-table already scrolls inside its TableCard frame.) */
 @media (max-width: 767px) {
-  main table {
+  main table:not(.data-table) {
     display: block;
     max-width: 100%;
     overflow-x: auto;
@@ -339,6 +340,188 @@ main details[open] > summary::before {
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* outlined chip for neutral facts (position codes, team types) */
+  .chip-outline {
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+  }
+
+  /* one consistent control style for search boxes and filters */
+  .field-input {
+    height: 2.25rem;
+    border-radius: 2px;
+    border: 1px solid var(--line-strong);
+    background-color: var(--surface);
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+  }
+  select.field-input {
+    padding-right: 1.75rem;
+  }
+
+  /* ---------- data tables ---------- */
+  .table-card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: color-mix(in oklab, var(--surface) 88%, transparent);
+    box-shadow:
+      0 1px 0 0 var(--line-soft),
+      0 12px 28px -22px rgb(0 0 0 / 0.35);
+    overflow: hidden;
+  }
+  .table-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .table-footer {
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--line);
+    background: color-mix(in oklab, var(--surface-2) 45%, transparent);
+  }
+  .table-footer > .pagination {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .data-table {
+    width: 100%;
+    text-align: left;
+    font-size: 0.875rem;
+  }
+  .data-table thead th {
+    padding: 0.6rem 1rem;
+    background: color-mix(in oklab, var(--surface-2) 70%, transparent);
+    border-bottom: 1px solid var(--line);
+    color: color-mix(in oklab, var(--ink) 62%, transparent);
+    white-space: nowrap;
+  }
+  .data-table tbody td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: middle;
+  }
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .data-table tbody tr {
+    position: relative;
+  }
+  .data-table tbody tr:hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--volt);
+  }
+  .data-table .num {
+    text-align: right;
+    font-family: var(--font-data), monospace;
+    font-size: 0.8rem;
+  }
+  .data-table .sub {
+    display: block;
+    margin-top: 0.1rem;
+    font-size: 0.75rem;
+    color: color-mix(in oklab, var(--ink) 58%, transparent);
+  }
+
+  /* stretched row link: the whole row opens the record */
+  .row-link {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .row-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+  tr:hover .row-link {
+    color: var(--link);
+  }
+  /* anything else interactive in a row sits above the stretched link */
+  .data-table tbody :is(button, select, input, a:not(.row-link)) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .skeleton {
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--line-soft) 0%,
+      var(--line) 50%,
+      var(--line-soft) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.3s ease-in-out infinite;
+  }
+}
+
+.notif:hover .row-link {
+  color: var(--link);
+}
+
+/* small pop for dropdown panels */
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-pop {
+  transform-origin: top right;
+  animation: pop 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* switch: a checkbox drawn as a toggle */
+.switch {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 2.1rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: var(--line-strong);
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  transition: transform 160ms ease;
+}
+.switch:checked {
+  background: var(--link);
+}
+.switch:checked::after {
+  transform: translateX(0.9rem);
+}
+.switch:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
   }
 }
 

@@ -7,9 +7,9 @@ import { useState } from "react";
 import { LogoMark, Wordmark } from "@/components/brand/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { FlashBanner } from "@/components/ui/flash-banner";
+import { PersonAvatar, RoleBadge, roleName } from "@/components/ui/person";
 import { useAuth } from "@/lib/auth";
 import { setFlash } from "@/lib/flash";
-import { ROLE_LABELS } from "@/lib/types";
 
 // Navigation is role-aware: an item shows only if the user holds its permission.
 // This is a usability nicety; the backend independently authorizes every request.
@@ -170,12 +170,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="relative border-t border-white/10 px-5 py-4">
-          <p className="truncate text-sm font-semibold">{user?.full_name}</p>
-          <p className="eyebrow mt-0.5 text-volt/80">
-            {active
-              ? (ROLE_LABELS[active.role] ?? active.role)
-              : (user?.platform_role ?? "member")}
-          </p>
+          <div className="flex items-center gap-3">
+            {user && <PersonAvatar name={user.full_name} size="md" />}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">
+                {user?.full_name}
+              </p>
+              <p className="eyebrow mt-0.5 truncate text-volt/80">
+                {active
+                  ? roleName(active.role)
+                  : (user?.platform_role ?? "member")}
+              </p>
+            </div>
+          </div>
           <button
             onClick={async () => {
               await logout();
@@ -218,7 +225,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     selectOrg(e.target.value);
                     router.push("/dashboard");
                   }}
-                  className="font-display max-w-[60vw] cursor-pointer truncate border-0 bg-transparent pr-1 text-xl font-bold uppercase [font-variation-settings:'opsz'_40] focus:ring-0"
+                  className="font-display max-w-[46vw] min-w-0 cursor-pointer truncate border-0 bg-transparent pr-1 text-xl font-bold uppercase [font-variation-settings:'opsz'_40] focus:ring-0 sm:max-w-[60vw]"
                 >
                   {memberships.map((m) => (
                     <option key={m.organization_id} value={m.organization_id}>
@@ -226,6 +233,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </option>
                   ))}
                 </select>
+                {active && (
+                  <span
+                    className="flex shrink-0 items-center gap-2"
+                    aria-label={`Your role here: ${roleName(active.role)}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="hidden h-5 w-px bg-line-strong sm:block"
+                    />
+                    <span className="eyebrow hidden opacity-55 lg:inline">
+                      You are
+                    </span>
+                    <RoleBadge
+                      role={active.role}
+                      className="sm:hidden"
+                      compact
+                    />
+                    <RoleBadge
+                      role={active.role}
+                      className="hidden px-2! py-0.5! sm:inline-flex"
+                    />
+                  </span>
+                )}
               </>
             ) : (
               <span className="eyebrow opacity-70">No organization</span>
