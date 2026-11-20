@@ -1,11 +1,18 @@
+"use client";
+
 import Link from "next/link";
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 
 import { LogoMark, PitchArt, Wordmark } from "@/components/brand/brand";
+import { FlashBanner } from "@/components/ui/flash-banner";
 
-type Props = ComponentProps<"input"> & { label: string; error?: string };
+type Props = ComponentProps<"input"> & {
+  label: string;
+  error?: string;
+  hint?: string;
+};
 
-export function Field({ label, error, id, ...input }: Props) {
+export function Field({ label, error, hint, id, ...input }: Props) {
   const fieldId = id ?? input.name;
   return (
     <div className="space-y-1.5">
@@ -15,10 +22,71 @@ export function Field({ label, error, id, ...input }: Props) {
       <input
         id={fieldId}
         aria-invalid={!!error}
-        aria-describedby={error ? `${fieldId}-error` : undefined}
+        aria-describedby={
+          error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined
+        }
         className="w-full rounded-[2px] border border-line-strong bg-surface px-3 py-2.5 text-[0.95rem] transition-shadow outline-none aria-[invalid=true]:border-bad"
         {...input}
       />
+      {hint && !error && (
+        <p id={`${fieldId}-hint`} className="text-xs opacity-60">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={`${fieldId}-error`} role="alert" className="text-xs text-bad">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Password input with a show/hide toggle and a Caps Lock warning. */
+export function PasswordField({ label, error, hint, id, ...input }: Props) {
+  const fieldId = id ?? input.name;
+  const [visible, setVisible] = useState(false);
+  const [capsLock, setCapsLock] = useState(false);
+  const describedBy = error
+    ? `${fieldId}-error`
+    : hint
+      ? `${fieldId}-hint`
+      : undefined;
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) =>
+    setCapsLock(e.getModifierState?.("CapsLock") ?? false);
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={fieldId} className="eyebrow block opacity-80">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={fieldId}
+          type={visible ? "text" : "password"}
+          aria-invalid={!!error}
+          aria-describedby={describedBy}
+          onKeyDown={onKey}
+          onKeyUp={onKey}
+          className="w-full rounded-[2px] border border-line-strong bg-surface py-2.5 pr-16 pl-3 text-[0.95rem] transition-shadow outline-none aria-[invalid=true]:border-bad"
+          {...input}
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "Hide password" : "Show password"}
+          aria-pressed={visible}
+          aria-controls={fieldId}
+          className="eyebrow absolute inset-y-0 right-0 px-3 opacity-60 hover:opacity-100"
+        >
+          {visible ? "Hide" : "Show"}
+        </button>
+      </div>
+      {capsLock && <p className="text-xs text-warn">Caps Lock is on.</p>}
+      {hint && !error && (
+        <p id={`${fieldId}-hint`} className="text-xs opacity-60">
+          {hint}
+        </p>
+      )}
       {error && (
         <p id={`${fieldId}-error`} role="alert" className="text-xs text-bad">
           {error}
@@ -72,6 +140,7 @@ export function AuthCard({
           </Link>
           <p className="eyebrow text-link">ScoutSphere · Access</p>
           <h1 className="mt-2 mb-8">{title}</h1>
+          <FlashBanner className="mb-6" />
           <div>{children}</div>
         </div>
       </main>

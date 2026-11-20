@@ -6,7 +6,9 @@ import { useState } from "react";
 
 import { LogoMark, Wordmark } from "@/components/brand/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { FlashBanner } from "@/components/ui/flash-banner";
 import { useAuth } from "@/lib/auth";
+import { setFlash } from "@/lib/flash";
 import { ROLE_LABELS } from "@/lib/types";
 
 // Navigation is role-aware: an item shows only if the user holds its permission.
@@ -177,6 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             onClick={async () => {
               await logout();
+              setFlash({ kind: "info", text: "You've been signed out." });
               router.replace("/login");
             }}
             className="eyebrow mt-3 text-dugout-ink/60 underline-offset-4 transition-colors hover:text-volt hover:underline"
@@ -243,6 +246,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           key={pathname}
           className="page-reveal mx-auto w-full max-w-6xl min-w-0 flex-1 px-4 py-6 md:px-8 md:py-10"
         >
+          <FlashBanner className="mb-6" />
           {children}
         </main>
       </div>
