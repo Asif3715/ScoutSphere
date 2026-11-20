@@ -337,3 +337,20 @@ async def test_logged_out_tokens_cannot_be_revived_inside_the_grace_window(clien
     assert (await client.post(f"{API}/auth/logout")).status_code == 204  # revokes just now
     assert (await _refresh(cookie))[0].status_code == 401  # within seconds, but the login is dead
     assert r.status_code == 200
+
+
+async def test_cors_accepts_both_loopback_spellings_only(client):
+    """localhost and 127.0.0.1 are different origins to a browser; both must work locally."""
+
+    async def preflight(origin):
+        return await client.options(
+            "/api/v1/auth/login",
+            headers={"Origin": origin, "Access-Control-Request-Method": "POST"},
+        )
+
+    for origin in ("http://localhost:3000", "http://127.0.0.1:3000"):
+        r = await preflight(origin)
+        assert r.status_code == 200 and r.headers["access-control-allow-origin"] == origin
+        assert r.headers["access-control-allow-credentials"] == "true"
+    r = await preflight("http://evil.example")
+    assert "access-control-allow-origin" not in r.headers

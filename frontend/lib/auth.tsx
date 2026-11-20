@@ -32,6 +32,7 @@ type AuthState = {
   activeOrgId: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  /** Creates the account only; the caller signs in afterwards so each step reports its own error. */
   register: (v: RegisterValues) => Promise<void>;
   logout: () => Promise<void>;
   /** Reloads user + memberships (after creating an org or accepting an invitation). */
@@ -106,22 +107,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [loadProfile],
   );
 
-  const register = useCallback(
-    async (v: RegisterValues) => {
-      await apiFetch("/auth/register", {
-        method: "POST",
-        auth: false,
-        json: {
-          email: v.email,
-          password: v.password,
-          full_name: v.full_name,
-          account_type: v.account_type,
-        },
-      });
-      await login(v.email, v.password);
-    },
-    [login],
-  );
+  const register = useCallback(async (v: RegisterValues) => {
+    await apiFetch("/auth/register", {
+      method: "POST",
+      auth: false,
+      json: {
+        email: v.email,
+        password: v.password,
+        full_name: v.full_name,
+        account_type: v.account_type,
+      },
+    });
+  }, []);
 
   const logout = useCallback(async () => {
     try {

@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://scoutsphere:scoutsphere@localhost:5433/scoutsphere"
     redis_url: str = "redis://localhost:6380/0"
 
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # Both loopback spellings: browsers treat localhost and 127.0.0.1 as different origins.
+    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     frontend_url: str = "http://localhost:3000"
     invitation_days: int = 7
 
