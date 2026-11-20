@@ -55,3 +55,9 @@ Detailed column definitions are written with each phase's models and kept here i
 - `scouting_reports` (subjective, org-private; optional assignment, match, club), `scouting_report_ratings` (20 attributes, 1-10 by CHECK), `scouting_report_versions` (immutable JSONB snapshot per submission), `scouting_report_reviews` (decision, comment, version reviewed).
 - `notifications` (per user, `seq` ordering, `read_at`) and `notification_preferences` (per user and type).
 - Deferred: configurable rating scales, WebSocket push, email delivery.
+
+**Phase 6 (migration 0007, recruitment):**
+- `recruitment_requirements` (org-private; criteria columns plus a JSONB map of minimum attribute ratings; `budget` stored but not used for matching until the contracts phase).
+- `recruitment_candidates` (one row per requirement and player), `candidate_status_history` (append-only, DB-generated `seq` ordering).
+- `shortlists`, `shortlist_players` (notes, priority), `shortlist_shares` (view-only grants to colleagues).
+- Deferred: contracts/transfer fields, trials.

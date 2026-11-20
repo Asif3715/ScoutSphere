@@ -29,6 +29,8 @@ from app.permissions.context import AuthContext  # noqa: E402
 from app.permissions.sync import sync_rbac  # noqa: E402
 
 TABLES_TO_CLEAN = [
+    "shortlist_shares", "shortlist_players", "shortlists", "recruitment_stage_history",
+    "recruitment_candidates", "recruitment_requirement_attributes", "recruitment_requirements",
     "audit_logs", "user_sessions", "invitations", "notification_preferences", "notifications",
     "scouting_report_reviews", "scouting_report_versions", "scouting_report_ratings",
     "scouting_reports", "assignment_history", "scout_assignments", "match_events",

@@ -459,3 +459,145 @@ export type AppNotification = {
   read: boolean;
   created_at: string;
 };
+
+// ---- recruitment -----------------------------------------------------------------------
+export const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+export const REQUIREMENT_STATUSES = [
+  "draft",
+  "open",
+  "on_hold",
+  "fulfilled",
+  "cancelled",
+] as const;
+export const STAGE_ORDER = [
+  "discovered",
+  "under_evaluation",
+  "shortlisted",
+  "scout_assigned",
+  "report_submitted",
+  "under_review",
+  "trial_proposed",
+  "negotiation",
+  "signed",
+] as const;
+export const STAGES = [...STAGE_ORDER, "rejected", "archived"] as const;
+
+export type RequirementSummary = {
+  id: string;
+  title: string;
+  position: string;
+  priority: string;
+  status: string;
+  candidate_count: number;
+  created_at: string;
+};
+export type Requirement = RequirementSummary & {
+  min_age: number | null;
+  max_age: number | null;
+  nationality: string | null;
+  preferred_foot: string | null;
+  min_appearances: number | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  currency: string | null;
+  contract_notes: string | null;
+  instructions: string | null;
+  attributes: Record<string, number>;
+  pipeline_counts: Record<string, number>;
+  created_by_name: string | null;
+  allowed_statuses: string[];
+};
+export type Criterion = {
+  name: string;
+  required: string;
+  actual: string | null;
+  met: boolean;
+};
+export type CandidateMatch = {
+  player: PlayerSummary;
+  criteria: Criterion[];
+  report_count: number;
+  in_pipeline: boolean;
+};
+export type Candidate = {
+  id: string;
+  requirement_id: string;
+  requirement_title: string;
+  player_id: string;
+  player_name: string;
+  age: number;
+  primary_position: string | null;
+  stage: string;
+  notes: string | null;
+  assignment_id: string | null;
+  assignment_status: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type CandidateDetail = Candidate & {
+  history: {
+    from_stage: string | null;
+    to_stage: string;
+    actor_name: string | null;
+    note: string | null;
+    created_at: string;
+  }[];
+  allowed_stages: string[];
+};
+export type ShortlistSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  priority: string;
+  requirement_id: string | null;
+  requirement_title: string | null;
+  player_count: number;
+  is_owner: boolean;
+  owner_name: string | null;
+  created_at: string;
+};
+export type ShortlistDetail = ShortlistSummary & {
+  players: {
+    player: PlayerSummary;
+    notes: string | null;
+    priority: string;
+    added_at: string;
+    pipeline: {
+      requirement_id: string;
+      requirement_title: string;
+      stage: string;
+    }[];
+  }[];
+  shared_with: { user_id: string; full_name: string }[];
+};
+export type ComparePlayer = {
+  player: PlayerSummary;
+  date_of_birth: string;
+  secondary_positions: string[];
+  height_cm: number | null;
+  weight_kg: number | null;
+  preferred_foot: string | null;
+  objective: {
+    appearances: number | null;
+    goals: number | null;
+    assists: number | null;
+    recent_club: string | null;
+    recent_appearances: number | null;
+    recent_goals: number | null;
+    recent_assists: number | null;
+    contract_status: string | null;
+  };
+  scouting: {
+    approved_reports: number;
+    ratings: Record<string, number>;
+    recommendations: Record<string, number>;
+    latest_recommendation: string | null;
+  };
+  suitability: Criterion[] | null;
+};
+export type CompareResult = {
+  players: ComparePlayer[];
+  attributes: string[];
+  leaders: Record<string, string[]>;
+  requirement_title: string | null;
+};

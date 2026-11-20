@@ -124,8 +124,12 @@ class PlayerRepository:
             )
         return stmt
 
-    async def search(self, f: PlayerFilters, page: PageParams) -> tuple[list[Player], int]:
+    async def search(
+        self, f: PlayerFilters, page: PageParams, extra: tuple = ()
+    ) -> tuple[list[Player], int]:
         stmt = self._apply(select(Player), f)
+        if extra:  # additional conditions (e.g. scout-rating filters) from callers
+            stmt = stmt.where(*extra)
         total = await self.db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
         order = {
             "name": [func.lower(Player.full_name), Player.id],

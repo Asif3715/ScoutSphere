@@ -199,3 +199,46 @@ async def notes(client, token, **params) -> list[dict]:
     )
     assert r.status_code == 200, r.text
     return r.json()["items"]
+
+
+# ---- recruitment ---------------------------------------------------------------------------
+REC = f"{API}/recruitment"
+
+
+def req_body(**kw) -> dict:
+    return {"title": "Creative midfielder", "position": "CM", **kw}
+
+
+async def make_requirement(client, s, headers=None, **kw) -> dict:
+    r = await client.post(f"{REC}/requirements", json=req_body(**kw), headers=headers or s.rm_h)
+    assert r.status_code == 201, r.text
+    return r.json()
+
+
+async def approved_report(client, s, player_id, ratings, rec="recommend") -> dict:
+    """A scout's report that a reviewer has approved (so its ratings count in recruitment)."""
+    r = await client.post(
+        f"{API}/scouting-reports",
+        json={
+            "player_id": player_id, "observed_on": datetime.now(UTC).date().isoformat(),
+            "recommendation": rec, "general_observations": "Observed live.", "ratings": ratings,
+        },
+        headers=s.scout_h,
+    )  # fmt: skip
+    assert r.status_code == 201, r.text
+    rid = r.json()["id"]
+    assert (
+        await client.post(f"{API}/scouting-reports/{rid}/submit", headers=s.scout_h)
+    ).status_code == 200
+    out = await client.post(
+        f"{API}/scouting-reports/{rid}/review", json={"decision": "approved"}, headers=s.rm_h
+    )
+    assert out.status_code == 200, out.text
+    return out.json()
+
+
+async def add_spell(client, s, player_id, club_id, **kw) -> dict:
+    body = {"club_id": club_id, "start_date": "2020-01-01", **kw}
+    r = await client.post(f"{API}/players/{player_id}/career", json=body, headers=s.owner_h)
+    assert r.status_code == 201, r.text
+    return r.json()

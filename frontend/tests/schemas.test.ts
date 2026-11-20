@@ -431,3 +431,96 @@ describe("reviewSchema", () => {
     ).toBe(true);
   });
 });
+
+import {
+  ratingFilters,
+  requirementPayload,
+  requirementSchema,
+  shortlistSchema,
+} from "@/lib/schemas";
+
+describe("requirementSchema / payload", () => {
+  const base = {
+    title: "Creative midfielder",
+    position: "CM",
+    priority: "medium" as const,
+    attributes: {},
+  };
+  it("validates required fields and ranges", () => {
+    expect(requirementSchema.safeParse(base).success).toBe(true);
+    expect(requirementSchema.safeParse({ ...base, title: "ab" }).success).toBe(
+      false,
+    );
+    expect(requirementSchema.safeParse({ ...base, position: "" }).success).toBe(
+      false,
+    );
+    expect(
+      requirementSchema.safeParse({ ...base, min_age: "30", max_age: "20" })
+        .success,
+    ).toBe(false);
+    expect(requirementSchema.safeParse({ ...base, min_age: "5" }).success).toBe(
+      false,
+    );
+    expect(
+      requirementSchema.safeParse({
+        ...base,
+        budget_min: "100",
+        budget_max: "50",
+        currency: "EUR",
+      }).success,
+    ).toBe(false);
+    expect(
+      requirementSchema.safeParse({ ...base, budget_min: "100" }).success,
+    ).toBe(false); // needs a currency
+    expect(
+      requirementSchema.safeParse({ ...base, currency: "EURO" }).success,
+    ).toBe(false);
+    expect(
+      requirementSchema.safeParse({ ...base, attributes: { passing: "11" } })
+        .success,
+    ).toBe(false);
+  });
+  it("builds the payload: blanks to null, numbers converted, currency upper-cased", () => {
+    const p = requirementPayload({
+      ...base,
+      min_age: "18",
+      max_age: "",
+      budget_min: "1000",
+      budget_max: "5000",
+      currency: "eur",
+      attributes: { passing: "7", speed: "" },
+      nationality: " ",
+    });
+    expect(p).toMatchObject({
+      min_age: 18,
+      max_age: null,
+      budget_min: 1000,
+      currency: "EUR",
+      nationality: null,
+    });
+    expect(p.attributes).toEqual({ passing: 7 });
+  });
+});
+
+describe("shortlistSchema / ratingFilters", () => {
+  it("validates the shortlist name", () => {
+    expect(
+      shortlistSchema.safeParse({ name: "x", priority: "low" }).success,
+    ).toBe(false);
+    expect(
+      shortlistSchema.safeParse({ name: "Summer targets", priority: "high" })
+        .success,
+    ).toBe(true);
+  });
+  it("only keeps valid rating filters", () => {
+    expect(
+      ratingFilters({
+        passing: "7",
+        speed: "",
+        agility: "11",
+        strength: "abc",
+        stamina: "0",
+      }),
+    ).toEqual(["passing:7"]);
+  });
+});

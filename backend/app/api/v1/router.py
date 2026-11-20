@@ -11,8 +11,10 @@ from app.api.v1 import (
     organizations,
     platform,
     players,
+    recruitment,
     reports,
     scouts,
+    shortlists,
     teams,
 )
 
@@ -30,3 +32,5 @@ api_router.include_router(matches.router)
 api_router.include_router(notifications.router)
 api_router.include_router(assignments.router)
 api_router.include_router(reports.router)
+api_router.include_router(recruitment.router)
+api_router.include_router(shortlists.router)
