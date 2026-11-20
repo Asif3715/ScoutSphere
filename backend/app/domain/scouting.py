@@ -44,4 +44,5 @@ NOTIFICATION_TYPES = [
     "assignment_assigned", "assignment_cancelled", "assignment_accepted", "assignment_submitted",
     "assignment_approved", "assignment_rejected", "assignment_returned", "assignment_deadline",
     "report_submitted", "report_approved", "report_rejected", "report_revision_requested",
+    "recruitment_status_updated", "player_shortlisted", "shortlist_shared",
 ]  # fmt: skip

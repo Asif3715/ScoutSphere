@@ -16,6 +16,15 @@ from app.models.notification import Notification, NotificationPreference
 from app.models.organization import Organization, OrganizationMember
 from app.models.player import Player, PlayerCareer, PlayerMedia, PlayerPosition
 from app.models.rbac import Permission, Role, RolePermission
+from app.models.recruitment import (
+    RecruitmentCandidate,
+    RecruitmentRequirement,
+    RecruitmentStageHistory,
+    RequirementAttribute,
+    Shortlist,
+    ShortlistPlayer,
+    ShortlistShare,
+)
 from app.models.report import (
     ScoutingReport,
     ScoutingReportRating,
@@ -50,6 +59,13 @@ __all__ = [
     "OrganizationMember",
     "Permission",
     "Player",
+    "RecruitmentCandidate",
+    "RecruitmentRequirement",
+    "RecruitmentStageHistory",
+    "RequirementAttribute",
+    "Shortlist",
+    "ShortlistPlayer",
+    "ShortlistShare",
     "PlayerCareer",
     "PlayerMedia",
     "PlayerPosition",
