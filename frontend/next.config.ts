@@ -21,6 +21,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The dev server blocks its scripts for any host but `localhost` unless listed. Without
+  // this, opening http://127.0.0.1:3000 renders pages that never become interactive.
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

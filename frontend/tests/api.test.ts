@@ -39,3 +39,29 @@ it("throws on unexpected status", async () => {
   );
   await expect(fetchReadiness()).rejects.toThrow();
 });
+
+import { resolveApiUrl } from "@/lib/api";
+
+it("follows the page's loopback name so the session cookie stays same-site", () => {
+  expect(resolveApiUrl("http://localhost:8000", "127.0.0.1")).toBe(
+    "http://127.0.0.1:8000",
+  );
+  expect(resolveApiUrl("http://127.0.0.1:8000", "localhost")).toBe(
+    "http://localhost:8000",
+  );
+  expect(resolveApiUrl("http://localhost:8000", "localhost")).toBe(
+    "http://localhost:8000",
+  );
+});
+
+it("never rewrites a real deployment address", () => {
+  expect(resolveApiUrl("https://api.scoutsphere.app", "127.0.0.1")).toBe(
+    "https://api.scoutsphere.app",
+  );
+  expect(resolveApiUrl("http://localhost:8000", "app.example.com")).toBe(
+    "http://localhost:8000",
+  );
+  expect(resolveApiUrl("http://localhost:8000", undefined)).toBe(
+    "http://localhost:8000",
+  );
+});
