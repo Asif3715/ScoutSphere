@@ -133,5 +133,22 @@ New error codes (QA round): `invalid_characters`, `payload_too_large`, `invalid_
 
 New error codes: `invalid_scout`, `invalid_target`, `deadline_in_past`, `not_editable`, `scout_locked`, `no_reports`, `reports_incomplete`, `reports_not_reviewed`, `note_required`, `scout_profile_required`, `invalid_assignment`, `assignment_not_open`, `assignment_mismatch`, `incomplete_report` (details list what is missing), `comment_required`, `not_submitted`, `cannot_review_own`, `has_history`.
 
+## Phase 6 endpoints (header-scoped with `X-Organization-Id`, prefix `/recruitment`)
+
+| Endpoint | Purpose |
+|---|---|
+| `GET/POST /requirements`, `GET/PATCH /requirements/{id}` | Recruitment requirements (position, age, nationality, foot, min appearances, per-attribute minimum ratings, budget, deadline, status) |
+| `GET /requirements/{id}/matches` | Discovery: players that satisfy every criterion, each with a per-criterion breakdown |
+| `GET /requirements/{id}/candidates`, `POST .../candidates` (+ `/bulk`) | Pipeline candidates for a requirement |
+| `GET /candidates/{id}`, `POST /candidates/{id}/stage`, `POST /candidates/{id}/assign-scout` | Candidate detail with status history, stage moves, scout assignment |
+| `GET /search` | Ad hoc discovery with the same filters (`min_rating=attribute:value`, repeatable) |
+| `POST /compare` | Compare 2-5 players, optionally against a requirement |
+| `GET/POST /shortlists`, `GET/PATCH/DELETE /shortlists/{id}` | Shortlists (`scope=all|mine|shared`) |
+| `POST/PATCH/DELETE /shortlists/{id}/players[/{player_id}]`, `PUT /shortlists/{id}/shares`, `GET /shortlists/{id}/compare` | Shortlist players, sharing, comparison |
+
+Pipeline stages: discovered, shortlisted, scout_assigned, under_evaluation, trial_invited, negotiation, final_decision, signed, rejected, archived. `signed` is reachable only from negotiation or final_decision; `rejected` and `archived` reopen only to `discovered`. Closed (fulfilled or cancelled) requirements freeze their pipeline except for archive/reject.
+
+New error codes: `invalid_transition`, `same_stage`, `requirement_closed`, `already_candidate`, `already_shortlisted`, `invalid_player`, `invalid_requirement`, `invalid_selection`, `invalid_user`, `not_editable`.
+
 ## Planned (later phases)
 Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.

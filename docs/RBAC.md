@@ -37,6 +37,14 @@ Platform: `super_admin` manages organizations, platform users, audit logs and ag
 - **Reports:** `reports:review` (owner, admin, recruitment manager) sees every report and may review any report except their own; `reports:write` (scouts, owner, admin) sees and edits their own; `reports:read` (also coaches) sees approved reports of the organization. Scouts can therefore read colleagues' *approved* reports.
 - **Notifications:** only ever visible to the user they were sent to.
 
+## Phase 6 rules
+
+- **Recruitment** (`recruitment:read`: owner, admin, recruitment manager, coach; `recruitment:manage`: owner, admin, recruitment manager). Scouts have no recruitment access.
+- **Shortlists are private to their creator until shared.** Even club owners cannot see an unshared shortlist; only the creator edits it. Sharing is view-only and limited to members who have recruitment access.
+- **Discovery** is a strict match of every criterion. Scout-rating criteria use the average over the organization's *approved* reports; other organizations' evaluations never appear. "Minimum appearances" means total career appearances. There is no composite score or ranking.
+- **Budget** is stored on requirements but does not filter candidates yet.
+- Moving a candidate you do not own notifies the requirement's creator.
+
 ## Rules
 1. Authorize in the service layer, on every operation.
 2. Org-scoped queries always include `organization_id` from `AuthContext`, never from client input alone.
