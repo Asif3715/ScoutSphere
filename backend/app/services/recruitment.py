@@ -46,7 +46,7 @@ from app.schemas.recruitment import (
 from app.services import assignments as assignment_service
 from app.services.audit import record_audit
 from app.services.notifications import notify
-from app.services.players import build_summary
+from app.services.players import build_summary, photo_thumb
 
 NOT_FOUND = AppError(404, "not_found", "Requirement not found")
 CANDIDATE_NOT_FOUND = AppError(404, "not_found", "Candidate not found")
@@ -500,7 +500,9 @@ async def requirement_matches(
 # ======================================================================================
 # pipeline
 # ======================================================================================
-async def _candidate_out(db: AsyncSession, rows: list[RecruitmentCandidate]) -> list[CandidateOut]:
+async def _candidate_out(
+    db: AsyncSession, ctx: AuthContext, rows: list[RecruitmentCandidate]
+) -> list[CandidateOut]:
     if not rows:
         return []
     players = {
@@ -540,6 +542,7 @@ async def _candidate_out(db: AsyncSession, rows: list[RecruitmentCandidate]) -> 
             primary_position=players[c.player_id].primary_position, stage=c.stage, notes=c.notes,
             assignment_id=c.assignment_id, assignment_status=statuses.get(c.assignment_id),
             created_at=c.created_at, updated_at=c.updated_at,
+            photo_thumb_url=photo_thumb(players[c.player_id], ctx),
         )
         for c in rows
     ]  # fmt: skip
@@ -610,7 +613,7 @@ async def add_candidate(
         organization_id=ctx.organization_id, target_type="candidate", target_id=str(candidate.id),
     )  # fmt: skip
     await db.commit()
-    return (await _candidate_out(db, [candidate]))[0]
+    return (await _candidate_out(db, ctx, [candidate]))[0]
 
 
 async def add_candidates(
@@ -634,7 +637,7 @@ async def add_candidates(
     )  # fmt: skip
     await db.commit()
     return BulkAddResult(
-        added=len(added), skipped=skipped, candidates=await _candidate_out(db, added)
+        added=len(added), skipped=skipped, candidates=await _candidate_out(db, ctx, added)
     )
 
 
@@ -658,7 +661,10 @@ async def list_candidates(
         ).all()
     )
     return Page(
-        items=await _candidate_out(db, rows), total=total, page=page.page, page_size=page.page_size
+        items=await _candidate_out(db, ctx, rows),
+        total=total,
+        page=page.page,
+        page_size=page.page_size,
     )
 
 
@@ -684,7 +690,7 @@ async def get_candidate(
 ) -> CandidateDetail:
     ctx.require(catalog.RECRUITMENT_READ)
     c = await _load_candidate(db, ctx, candidate_id)
-    out = (await _candidate_out(db, [c]))[0]
+    out = (await _candidate_out(db, ctx, [c]))[0]
     history = (
         await db.execute(
             select(RecruitmentStageHistory, User.full_name)

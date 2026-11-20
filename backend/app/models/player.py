@@ -49,7 +49,13 @@ class Player(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     preferred_foot: Mapped[str | None] = mapped_column(String(10), nullable=True)
     primary_position: Mapped[str | None] = mapped_column(String(5), nullable=True)
     biography: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # External image link (legacy, optional). An uploaded photo, when present, wins over it.
     profile_picture_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Storage key of the uploaded photo (processed, metadata stripped); see services/media.py.
+    photo_key: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    photo_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # private: owner org (+ orgs with the player in a squad); network: every org; public: reserved
     visibility: Mapped[str] = mapped_column(String(10), nullable=False, default="private")
     # NULL when a player self-registers; otherwise the organization that created the record.

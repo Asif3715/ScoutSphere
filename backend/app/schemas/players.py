@@ -115,6 +115,11 @@ class PlayerOut(BaseModel):
     secondary_positions: list[str]
     biography: str | None
     profile_picture_url: str | None
+    # Signed, time-limited paths (prefix with the API origin). Uploaded photo first, else the
+    # external link; None when there is no photo or it is withheld (minors, other orgs).
+    photo_url: str | None
+    photo_thumb_url: str | None
+    has_uploaded_photo: bool
     visibility: str
     is_owner: bool  # created by the caller's organization
     current_club: CurrentClub | None
@@ -130,6 +135,7 @@ class PlayerSummary(BaseModel):
     primary_position: str | None
     current_club: CurrentClub | None
     is_owner: bool
+    photo_thumb_url: str | None = None
 
 
 class DuplicateCandidate(BaseModel):

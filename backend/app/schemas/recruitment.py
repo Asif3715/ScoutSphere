@@ -182,6 +182,7 @@ class CandidateOut(BaseModel):
     assignment_status: str | None
     created_at: datetime
     updated_at: datetime
+    photo_thumb_url: str | None = None
 
 
 class CandidateDetail(CandidateOut):
