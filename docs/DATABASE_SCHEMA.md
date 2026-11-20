@@ -61,3 +61,6 @@ Detailed column definitions are written with each phase's models and kept here i
 - `recruitment_candidates` (one row per requirement and player), `candidate_status_history` (append-only, DB-generated `seq` ordering).
 - `shortlists`, `shortlist_players` (notes, priority), `shortlist_shares` (view-only grants to colleagues).
 - Deferred: contracts/transfer fields, trials.
+
+**Player photos (migration 0008):**
+- `players.photo_key` (storage key of the processed photo; the thumbnail key is derived) and `players.photo_updated_at`. Files live outside the database, under `MEDIA_ROOT` (a Docker volume locally); the storage layer is an interface so object storage can replace it.

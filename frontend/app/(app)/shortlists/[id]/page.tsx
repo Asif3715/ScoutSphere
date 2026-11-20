@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { PlayerAvatar } from "@/components/players/player-avatar";
 import { Button, Card, Empty, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
@@ -211,6 +212,12 @@ export default function ShortlistPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
+                  <PlayerAvatar
+                    name={e.player.full_name}
+                    src={e.player.photo_thumb_url}
+                    size="xs"
+                    className="mr-2 align-middle"
+                  />
                   <Link
                     href={`/players/${e.player.id}`}
                     className="font-medium text-link hover:underline"

@@ -237,7 +237,8 @@ export function PlayerForm({
       </div>
 
       <Field
-        label="Profile picture URL"
+        label="Photo link (optional)"
+        hint="Only if the photo is hosted elsewhere. Uploading a photo is preferred and replaces this."
         error={errors.profile_picture_url?.message}
         {...register("profile_picture_url")}
       />

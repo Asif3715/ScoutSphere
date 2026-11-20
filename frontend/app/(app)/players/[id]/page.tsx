@@ -8,6 +8,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Field } from "@/components/auth/field";
+import { PhotoEditor } from "@/components/players/photo-editor";
+import { PlayerAvatar } from "@/components/players/player-avatar";
 import { PlayerForm } from "@/components/players/player-form";
 import { Button, Card, Empty, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
@@ -100,31 +102,40 @@ export default function PlayerPage() {
       <Link href="/players" className="text-sm text-link underline">
         ← Players
       </Link>
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {p.full_name}
-            {p.is_minor && (
-              <span className="ml-2 rounded bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">
-                Under 18
-              </span>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-5">
+          <PlayerAvatar name={p.full_name} src={p.photo_url} size="xl" />
+          <div>
+            <h1 className="text-2xl font-bold">
+              {p.full_name}
+              {p.is_minor && (
+                <span className="ml-2 rounded bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">
+                  Under 18
+                </span>
+              )}
+            </h1>
+            <p className="text-sm opacity-70">
+              {[
+                p.age + " years",
+                p.primary_position,
+                p.nationality,
+                p.current_club?.club_name,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+            <p className="text-xs opacity-60">
+              {p.is_owner
+                ? VISIBILITY_LABELS[p.visibility]
+                : "Shared with your organization by another club (read-only)"}
+            </p>
+            {p.is_minor && !p.is_owner && (
+              <p className="mt-1 text-xs opacity-60">
+                Photos of under-18 players are only visible to the club that
+                added them.
+              </p>
             )}
-          </h1>
-          <p className="text-sm opacity-70">
-            {[
-              p.age + " years",
-              p.primary_position,
-              p.nationality,
-              p.current_club?.club_name,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
-          <p className="text-xs opacity-60">
-            {p.is_owner
-              ? VISIBILITY_LABELS[p.visibility]
-              : "Shared with your organization by another club (read-only)"}
-          </p>
+          </div>
         </div>
         {canEdit && !editing && (
           <div className="flex gap-2">
@@ -138,6 +149,28 @@ export default function PlayerPage() {
         )}
       </header>
       <ErrorText>{actionError}</ErrorText>
+      {canEdit && !editing && (
+        <Card className="space-y-3">
+          <h2>Photo</h2>
+          <PhotoEditor
+            name={p.full_name}
+            current={p.photo_url}
+            onSave={async (file, crop) => {
+              const body = new FormData();
+              body.append("file", file);
+              body.append("crop_x", String(crop.x));
+              body.append("crop_y", String(crop.y));
+              body.append("crop_size", String(crop.size));
+              await apiFetch(`/players/${id}/photo`, { method: "PUT", body });
+              refresh();
+            }}
+            onRemove={async () => {
+              await apiFetch(`/players/${id}/photo`, { method: "DELETE" });
+              refresh();
+            }}
+          />
+        </Card>
+      )}
 
       {editing ? (
         <PlayerForm

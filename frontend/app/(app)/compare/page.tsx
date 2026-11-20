@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
+import { PlayerAvatar } from "@/components/players/player-avatar";
 import { Card, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/http";
@@ -133,7 +134,13 @@ function Compare() {
                 <tr>
                   <th className="w-44 py-2"></th>
                   {data.players.map((p) => (
-                    <th key={p.player.id}>
+                    <th key={p.player.id} className="pb-2 align-bottom">
+                      <PlayerAvatar
+                        name={p.player.full_name}
+                        src={p.player.photo_thumb_url}
+                        size="md"
+                        className="mb-2 block"
+                      />
                       <Link
                         href={`/players/${p.player.id}`}
                         className="text-link hover:underline"

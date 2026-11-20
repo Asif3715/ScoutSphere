@@ -15,3 +15,7 @@ Found during the manual QA round (adversarial API probing, concurrency races, a 
 
 ## Dev-only noise
 8. Next.js 16 dev mode logs "instant navigation" validation errors in the browser console for every route. They do not appear in production builds and do not affect behaviour.
+
+## Player photos
+- Photos are stored on the backend's local disk (Docker volume `media`). Before running more than one backend instance, or for backups, move them to object storage (S3 / MinIO) behind the existing storage interface.
+- Signed photo URLs are bearer-like: anyone holding one can view that photo until it expires (24 to 48 hours). They are only ever given to users allowed to see the player.
