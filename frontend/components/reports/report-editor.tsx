@@ -22,7 +22,7 @@ import {
 } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 const TEXT_FIELDS = [
   ["strengths", "Strengths"],
   ["weaknesses", "Weaknesses"],
@@ -214,7 +214,7 @@ export function ReportEditor({
                     inputMode="numeric"
                     maxLength={2}
                     aria-invalid={!!errors.ratings?.[attr]}
-                    className="w-14 rounded-md border border-slate-300 bg-transparent px-2 py-1 text-center text-sm aria-[invalid=true]:border-red-500"
+                    className="w-14 rounded-[2px] border border-line-strong bg-transparent px-2 py-1 text-center text-sm aria-[invalid=true]:border-bad"
                     {...register(`ratings.${attr}`)}
                   />
                 </div>

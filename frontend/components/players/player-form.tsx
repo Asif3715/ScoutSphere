@@ -34,7 +34,7 @@ export function toPlayerValues(p?: Player): PlayerValues {
 }
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export function PlayerForm({
   player,
@@ -86,7 +86,7 @@ export function PlayerForm({
       noValidate
     >
       {duplicates && (
-        <Card className="space-y-2 border-amber-400 bg-amber-50 text-amber-950">
+        <Card className="space-y-2 border-warn bg-warn-soft text-warn">
           <p className="font-semibold">
             This might be a player who already exists
           </p>

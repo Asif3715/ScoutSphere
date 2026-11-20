@@ -19,7 +19,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-2 py-1 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-2 py-1 text-sm";
 // roles that have recruitment access and so can be given a shared shortlist
 const CAN_SHARE_WITH = [
   "club_owner",
@@ -62,7 +62,7 @@ export default function ShortlistPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{sl.error?.message ?? "Shortlist not found"}</ErrorText>
-        <Link href="/shortlists" className="text-sm text-teal-600 underline">
+        <Link href="/shortlists" className="text-sm text-link underline">
           Back to shortlists
         </Link>
       </div>
@@ -93,7 +93,7 @@ export default function ShortlistPage() {
 
   return (
     <div className="space-y-5">
-      <Link href="/shortlists" className="text-sm text-teal-600 underline">
+      <Link href="/shortlists" className="text-sm text-link underline">
         ← Shortlists
       </Link>
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -207,13 +207,13 @@ export default function ShortlistPage() {
           {s.players.map((e) => (
             <li
               key={e.player.id}
-              className="rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800"
+              className="rounded-[2px] border border-line p-3 text-sm"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <Link
                     href={`/players/${e.player.id}`}
-                    className="font-medium text-teal-600 hover:underline"
+                    className="font-medium text-link hover:underline"
                   >
                     {e.player.full_name}
                   </Link>{" "}
@@ -225,7 +225,7 @@ export default function ShortlistPage() {
                     <Link
                       key={p.requirement_id}
                       href={`/recruitment/${p.requirement_id}`}
-                      className="ml-2 rounded bg-blue-100 px-1.5 text-xs text-blue-900"
+                      className="ml-2 rounded bg-info-soft px-1.5 text-xs text-info"
                     >
                       {p.requirement_title}: {label(p.stage)}
                     </Link>

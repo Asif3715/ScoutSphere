@@ -58,14 +58,14 @@ function LoginForm() {
           {...register("password")}
         />
         {formError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-bad">
             {formError}
           </p>
         )}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-60"
+          className="btn btn-primary w-full py-3"
         >
           {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
@@ -74,7 +74,7 @@ function LoginForm() {
         No account?{" "}
         <Link
           href={`/register${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`}
-          className="text-teal-600 underline"
+          className="text-link underline"
         >
           Register
         </Link>

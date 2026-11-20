@@ -80,7 +80,7 @@ function RegisterForm() {
           <select
             id="account_type"
             {...register("account_type")}
-            className="w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm"
+            className="w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm"
           >
             <option value="standard">Club staff / scout</option>
             <option value="player">Player</option>
@@ -88,14 +88,14 @@ function RegisterForm() {
           </select>
         </div>
         {formError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-bad">
             {formError}
           </p>
         )}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-60"
+          className="btn btn-primary w-full py-3"
         >
           {isSubmitting ? "Creating account…" : "Create account"}
         </button>
@@ -104,7 +104,7 @@ function RegisterForm() {
         Already registered?{" "}
         <Link
           href={`/login${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`}
-          className="text-teal-600 underline"
+          className="text-link underline"
         >
           Sign in
         </Link>

@@ -14,7 +14,7 @@ import { teamSchema, type TeamValues } from "@/lib/schemas";
 import { TEAM_TYPES, type Club, type Page, type Team } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export default function TeamsPage() {
   const { activeOrgId, can } = useAuth();
@@ -66,7 +66,7 @@ export default function TeamsPage() {
       )}
       {teams.data && teams.data.length > 0 && (
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+          <thead className="border-b border-line text-xs uppercase opacity-60">
             <tr>
               <th className="py-2">Team</th>
               <th>Club</th>
@@ -76,14 +76,11 @@ export default function TeamsPage() {
           </thead>
           <tbody>
             {teams.data.map((t) => (
-              <tr
-                key={t.id}
-                className="border-b border-slate-100 dark:border-slate-900"
-              >
+              <tr key={t.id} className="border-b border-line-soft">
                 <td className="py-2">
                   <Link
                     href={`/teams/${t.id}`}
-                    className="font-medium text-teal-600 hover:underline"
+                    className="font-medium text-link hover:underline"
                   >
                     {t.name}
                   </Link>

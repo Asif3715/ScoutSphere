@@ -14,7 +14,7 @@ import { competitionSchema, type CompetitionValues } from "@/lib/schemas";
 import { COMPETITION_TYPES, type Competition, type Page } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export default function CompetitionsPage() {
   const { activeOrgId, can } = useAuth();
@@ -70,7 +70,7 @@ export default function CompetitionsPage() {
           setQ(e.target.value);
           setPage(1);
         }}
-        className="rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm"
+        className="rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm"
       />
       {isLoading && <p aria-busy="true">Loading…</p>}
       <ErrorText>{error?.message}</ErrorText>
@@ -78,7 +78,7 @@ export default function CompetitionsPage() {
       {data && data.items.length > 0 && (
         <>
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+            <thead className="border-b border-line text-xs uppercase opacity-60">
               <tr>
                 <th className="py-2">Name</th>
                 <th>Type</th>
@@ -88,14 +88,11 @@ export default function CompetitionsPage() {
             </thead>
             <tbody>
               {data.items.map((c) => (
-                <tr
-                  key={c.id}
-                  className="border-b border-slate-100 dark:border-slate-900"
-                >
+                <tr key={c.id} className="border-b border-line-soft">
                   <td className="py-2">
                     <Link
                       href={`/competitions/${c.id}`}
-                      className="font-medium text-teal-600 hover:underline"
+                      className="font-medium text-link hover:underline"
                     >
                       {c.name}
                     </Link>

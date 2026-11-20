@@ -43,7 +43,7 @@ export default function SeasonPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{loadError?.message ?? "Season not found"}</ErrorText>
-        <Link href="/competitions" className="text-sm text-teal-600 underline">
+        <Link href="/competitions" className="text-sm text-link underline">
           Back to competitions
         </Link>
       </div>
@@ -68,7 +68,7 @@ export default function SeasonPage() {
     <div className="space-y-6">
       <Link
         href={`/competitions/${season.competition_id}`}
-        className="text-sm text-teal-600 underline"
+        className="text-sm text-link underline"
       >
         ← {season.competition_name}
       </Link>
@@ -80,7 +80,7 @@ export default function SeasonPage() {
           {season.start_date} → {season.end_date} · {season.match_count} matches
           ·{" "}
           <Link
-            className="text-teal-600 underline"
+            className="text-link underline"
             href={`/matches?season_id=${season.id}`}
           >
             view matches
@@ -101,7 +101,7 @@ export default function SeasonPage() {
             {season.participants.map((p) => (
               <li
                 key={p.club_id}
-                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-800"
+                className="flex items-center justify-between rounded-[2px] border border-line px-3 py-2 text-sm"
               >
                 <span>
                   {p.club_name}
@@ -137,7 +137,7 @@ export default function SeasonPage() {
               aria-label="Club to add"
               value={clubId}
               onChange={(e) => setClubId(e.target.value)}
-              className="flex-1 rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm"
+              className="flex-1 rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm"
             >
               <option value="">Choose…</option>
               {clubs.data

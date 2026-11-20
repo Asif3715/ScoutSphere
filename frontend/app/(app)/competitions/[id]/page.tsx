@@ -43,7 +43,7 @@ export default function CompetitionPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{error?.message ?? "Competition not found"}</ErrorText>
-        <Link href="/competitions" className="text-sm text-teal-600 underline">
+        <Link href="/competitions" className="text-sm text-link underline">
           Back to competitions
         </Link>
       </div>
@@ -79,7 +79,7 @@ export default function CompetitionPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/competitions" className="text-sm text-teal-600 underline">
+      <Link href="/competitions" className="text-sm text-link underline">
         ← Competitions
       </Link>
       <header className="flex items-start justify-between gap-4">
@@ -108,12 +108,12 @@ export default function CompetitionPage() {
             {comp.seasons.map((s) => (
               <li
                 key={s.id}
-                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-800"
+                className="flex items-center justify-between rounded-[2px] border border-line px-3 py-2 text-sm"
               >
                 <div>
                   <Link
                     href={`/seasons/${s.id}`}
-                    className="font-medium text-teal-600 hover:underline"
+                    className="font-medium text-link hover:underline"
                   >
                     {s.name}
                   </Link>
@@ -124,7 +124,7 @@ export default function CompetitionPage() {
                 </div>
                 <Link
                   href={`/matches?season_id=${s.id}`}
-                  className="text-xs text-teal-600 underline"
+                  className="text-xs text-link underline"
                 >
                   View matches
                 </Link>

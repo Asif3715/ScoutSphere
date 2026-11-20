@@ -50,7 +50,7 @@ function Compare() {
         <h1 className="text-2xl font-bold">Compare players</h1>
         <p className="text-sm">
           Choose 2 to 5 players from{" "}
-          <Link className="text-teal-600 underline" href="/recruitment/search">
+          <Link className="text-link underline" href="/recruitment/search">
             Find players
           </Link>{" "}
           or from a shortlist.
@@ -110,7 +110,7 @@ function Compare() {
                 `/compare?ids=${ids.join(",")}${e.target.value ? `&requirement_id=${e.target.value}` : ""}`,
               )
             }
-            className="rounded-md border border-slate-300 bg-transparent px-2 py-1"
+            className="rounded-[2px] border border-line-strong bg-transparent px-2 py-1"
           >
             <option value="">None</option>
             {reqs.data?.items.map((r) => (
@@ -128,15 +128,15 @@ function Compare() {
           {table(
             "Profile",
             null,
-            <table className="w-full min-w-max text-left text-sm">
-              <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+            <table className="w-full min-w-[40rem] table-fixed text-left text-sm">
+              <thead className="border-b border-line text-xs uppercase opacity-60">
                 <tr>
-                  <th className="py-2"></th>
+                  <th className="w-44 py-2"></th>
                   {data.players.map((p) => (
                     <th key={p.player.id}>
                       <Link
                         href={`/players/${p.player.id}`}
-                        className="text-teal-600 hover:underline"
+                        className="text-link hover:underline"
                       >
                         {p.player.full_name}
                       </Link>
@@ -146,11 +146,8 @@ function Compare() {
               </thead>
               <tbody>
                 {rows.map(([name, fn]) => (
-                  <tr
-                    key={name}
-                    className="border-b border-slate-100 dark:border-slate-900"
-                  >
-                    <th className="py-1 pr-4 text-left font-normal opacity-70">
+                  <tr key={name} className="border-b border-line-soft">
+                    <th className="w-44 py-1 pr-4 text-left font-normal opacity-70">
                       {name}
                     </th>
                     {data.players.map((p) => (
@@ -164,14 +161,11 @@ function Compare() {
           {table(
             "Objective statistics",
             "Recorded facts only. Nothing here comes from a scout's opinion. A dash means no data is recorded.",
-            <table className="w-full min-w-max text-left text-sm">
+            <table className="w-full min-w-[40rem] table-fixed text-left text-sm">
               <tbody>
                 {objective.map(([name, fn]) => (
-                  <tr
-                    key={name}
-                    className="border-b border-slate-100 dark:border-slate-900"
-                  >
-                    <th className="py-1 pr-4 text-left font-normal opacity-70">
+                  <tr key={name} className="border-b border-line-soft">
+                    <th className="w-44 py-1 pr-4 text-left font-normal opacity-70">
                       {name}
                     </th>
                     {data.players.map((p) => (
@@ -185,18 +179,18 @@ function Compare() {
           {table(
             "Scout evaluations",
             "Subjective. Averages over your organization's approved reports only. A highlighted value is the highest in its row; ties are all highlighted. There is no overall score.",
-            <table className="w-full min-w-max text-left text-sm">
+            <table className="w-full min-w-[40rem] table-fixed text-left text-sm">
               <tbody>
-                <tr className="border-b border-slate-100 dark:border-slate-900">
-                  <th className="py-1 pr-4 text-left font-normal opacity-70">
+                <tr className="border-b border-line-soft">
+                  <th className="w-44 py-1 pr-4 text-left font-normal opacity-70">
                     Approved reports
                   </th>
                   {data.players.map((p) => (
                     <td key={p.player.id}>{p.scouting.approved_reports}</td>
                   ))}
                 </tr>
-                <tr className="border-b border-slate-100 dark:border-slate-900">
-                  <th className="py-1 pr-4 text-left font-normal opacity-70">
+                <tr className="border-b border-line-soft">
+                  <th className="w-44 py-1 pr-4 text-left font-normal opacity-70">
                     Latest recommendation
                   </th>
                   {data.players.map((p) => (
@@ -208,11 +202,8 @@ function Compare() {
                   ))}
                 </tr>
                 {data.attributes.map((a) => (
-                  <tr
-                    key={a}
-                    className="border-b border-slate-100 dark:border-slate-900"
-                  >
-                    <th className="py-1 pr-4 text-left font-normal capitalize opacity-70">
+                  <tr key={a} className="border-b border-line-soft">
+                    <th className="w-44 py-1 pr-4 text-left font-normal capitalize opacity-70">
                       {label(a)}
                     </th>
                     {data.players.map((p) => {
@@ -221,7 +212,7 @@ function Compare() {
                       return (
                         <td
                           key={p.player.id}
-                          className={best ? "font-bold text-teal-600" : ""}
+                          className={best ? "font-bold text-link" : ""}
                         >
                           {v == null ? "—" : v.toFixed(1)}
                         </td>
@@ -251,7 +242,7 @@ function Compare() {
                       {p.suitability!.map((c) => (
                         <li
                           key={c.name}
-                          className={c.met ? "text-green-700" : "text-red-700"}
+                          className={c.met ? "text-ok" : "text-bad"}
                         >
                           {c.met ? "✓" : "✗"} {c.name}: {c.actual ?? "no data"}{" "}
                           <span className="opacity-60">

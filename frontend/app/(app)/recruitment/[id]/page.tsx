@@ -23,7 +23,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-2 py-1 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-2 py-1 text-sm";
 
 export default function RequirementPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,7 +53,7 @@ export default function RequirementPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{req.error?.message ?? "Requirement not found"}</ErrorText>
-        <Link href="/recruitment" className="text-sm text-teal-600 underline">
+        <Link href="/recruitment" className="text-sm text-link underline">
           Back to recruitment
         </Link>
       </div>
@@ -97,7 +97,7 @@ export default function RequirementPage() {
 
   return (
     <div className="space-y-5">
-      <Link href="/recruitment" className="text-sm text-teal-600 underline">
+      <Link href="/recruitment" className="text-sm text-link underline">
         ← Recruitment
       </Link>
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -153,7 +153,7 @@ export default function RequirementPage() {
             {criteria.map(([k, v]) => (
               <li
                 key={k}
-                className="rounded-full border border-slate-300 px-3 py-0.5"
+                className="rounded-full border border-line-strong px-3 py-0.5"
               >
                 <span className="opacity-60">{k}:</span> {v}
               </li>
@@ -323,12 +323,12 @@ function CandidateRow({
   const moves = allowedStages(c.stage);
 
   return (
-    <li className="rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800">
+    <li className="rounded-[2px] border border-line p-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <Link
             href={`/players/${c.player_id}`}
-            className="font-medium text-teal-600 hover:underline"
+            className="font-medium text-link hover:underline"
           >
             {c.player_name}
           </Link>{" "}
@@ -338,7 +338,7 @@ function CandidateRow({
           {c.assignment_id && (
             <Link
               href={`/assignments/${c.assignment_id}`}
-              className="ml-2 text-xs text-teal-600 underline"
+              className="ml-2 text-xs text-link underline"
             >
               assignment:{" "}
               {c.assignment_status ? label(c.assignment_status) : "view"}
@@ -436,7 +436,7 @@ function CandidateRow({
       )}
 
       {open && (
-        <ol className="mt-3 space-y-1 border-t border-slate-200 pt-2 text-xs dark:border-slate-800">
+        <ol className="mt-3 space-y-1 border-t border-line pt-2 text-xs">
           {detail.data?.history.map((h, i) => (
             <li key={i}>
               <span className="opacity-60">
@@ -519,7 +519,7 @@ function Discovery({
         {data?.items.map((m) => (
           <li
             key={m.player.id}
-            className="rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800"
+            className="rounded-[2px] border border-line p-3 text-sm"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-start gap-2">
@@ -541,7 +541,7 @@ function Discovery({
                 <div>
                   <Link
                     href={`/players/${m.player.id}`}
-                    className="font-medium text-teal-600 hover:underline"
+                    className="font-medium text-link hover:underline"
                   >
                     {m.player.full_name}
                   </Link>{" "}
@@ -556,7 +556,7 @@ function Discovery({
                     {m.criteria.map((c) => (
                       <li
                         key={c.name}
-                        className={`rounded px-1.5 py-0.5 ${c.met ? "bg-green-100 text-green-900" : "bg-red-100 text-red-900"}`}
+                        className={`rounded px-1.5 py-0.5 ${c.met ? "bg-ok-soft text-ok" : "bg-bad-soft text-bad"}`}
                       >
                         {c.met ? "✓" : "✗"} {c.name}: {c.actual ?? "no data"}{" "}
                         <span className="opacity-60">(need {c.required})</span>

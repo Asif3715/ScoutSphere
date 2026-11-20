@@ -46,7 +46,7 @@ function NewReport() {
             For assignment{" "}
             <Link
               href={`/assignments/${assignment.data.id}`}
-              className="font-medium text-teal-600 underline"
+              className="font-medium text-link underline"
             >
               {assignment.data.title}
             </Link>
