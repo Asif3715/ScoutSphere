@@ -17,7 +17,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
 
 export default function ReportsPage() {
   const { activeOrgId, can } = useAuth();
@@ -46,10 +46,7 @@ export default function ReportsPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Scouting reports</h1>
         {can("reports:write") && (
-          <Link
-            href="/reports/new"
-            className="rounded-md bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
-          >
+          <Link href="/reports/new" className="btn btn-primary">
             New report
           </Link>
         )}
@@ -114,7 +111,7 @@ export default function ReportsPage() {
       {data && data.items.length > 0 && (
         <>
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+            <thead className="border-b border-line text-xs uppercase opacity-60">
               <tr>
                 <th className="py-2">Player</th>
                 <th>Scout</th>
@@ -126,14 +123,11 @@ export default function ReportsPage() {
             </thead>
             <tbody>
               {data.items.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-b border-slate-100 dark:border-slate-900"
-                >
+                <tr key={r.id} className="border-b border-line-soft">
                   <td className="py-2">
                     <Link
                       href={`/reports/${r.id}`}
-                      className="font-medium text-teal-600 hover:underline"
+                      className="font-medium text-link hover:underline"
                     >
                       {r.player_name}
                     </Link>

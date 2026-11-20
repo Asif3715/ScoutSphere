@@ -45,7 +45,7 @@ export default function AssignmentPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{loadError?.message ?? "Assignment not found"}</ErrorText>
-        <Link href="/assignments" className="text-sm text-teal-600 underline">
+        <Link href="/assignments" className="text-sm text-link underline">
           Back to assignments
         </Link>
       </div>
@@ -85,7 +85,7 @@ export default function AssignmentPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/assignments" className="text-sm text-teal-600 underline">
+      <Link href="/assignments" className="text-sm text-link underline">
         ← Assignments
       </Link>
       <header className="space-y-1">
@@ -94,7 +94,7 @@ export default function AssignmentPage() {
         </h1>
         <p className="text-sm opacity-70">
           {a.target_type}:{" "}
-          <Link href={targetHref} className="text-teal-600 underline">
+          <Link href={targetHref} className="text-link underline">
             {a.target_label}
           </Link>{" "}
           · Scout: {a.scout_name}
@@ -103,7 +103,7 @@ export default function AssignmentPage() {
           Deadline:{" "}
           {a.deadline ? new Date(a.deadline).toLocaleString() : "none"}
           {a.is_overdue && (
-            <span className="ml-2 rounded bg-red-100 px-1.5 text-xs text-red-900">
+            <span className="ml-2 rounded bg-bad-soft px-1.5 text-xs text-bad">
               overdue
             </span>
           )}
@@ -139,7 +139,7 @@ export default function AssignmentPage() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              className="mt-1 w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm"
             />
           </label>
           <div className="flex flex-wrap gap-2">
@@ -176,10 +176,7 @@ export default function AssignmentPage() {
             Reports ({a.reports.length})
           </h2>
           {canWriteReport && (
-            <Link
-              href={newReportHref}
-              className="rounded-md bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
-            >
+            <Link href={newReportHref} className="btn btn-primary">
               Write report
             </Link>
           )}
@@ -191,11 +188,11 @@ export default function AssignmentPage() {
             {a.reports.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-800"
+                className="flex items-center justify-between rounded-[2px] border border-line px-3 py-2 text-sm"
               >
                 <Link
                   href={`/reports/${r.id}`}
-                  className="font-medium text-teal-600 hover:underline"
+                  className="font-medium text-link hover:underline"
                 >
                   {r.player_name}
                 </Link>
@@ -215,7 +212,7 @@ export default function AssignmentPage() {
           {a.history.map((h, i) => (
             <li
               key={i}
-              className="rounded-md border border-slate-200 px-3 py-1.5 dark:border-slate-800"
+              className="rounded-[2px] border border-line px-3 py-1.5"
             >
               <span className="text-xs opacity-60">
                 {new Date(h.created_at).toLocaleString()}

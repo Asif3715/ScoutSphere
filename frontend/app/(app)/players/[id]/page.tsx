@@ -30,7 +30,7 @@ import {
 } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export default function PlayerPage() {
   const { id } = useParams<{ id: string }>();
@@ -62,7 +62,7 @@ export default function PlayerPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{player.error?.message ?? "Player not found"}</ErrorText>
-        <Link href="/players" className="text-sm text-teal-600 underline">
+        <Link href="/players" className="text-sm text-link underline">
           Back to players
         </Link>
       </div>
@@ -97,7 +97,7 @@ export default function PlayerPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/players" className="text-sm text-teal-600 underline">
+      <Link href="/players" className="text-sm text-link underline">
         ← Players
       </Link>
       <header className="flex items-start justify-between gap-4">
@@ -105,7 +105,7 @@ export default function PlayerPage() {
           <h1 className="text-2xl font-bold">
             {p.full_name}
             {p.is_minor && (
-              <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+              <span className="ml-2 rounded bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">
                 Under 18
               </span>
             )}
@@ -361,7 +361,7 @@ function CareerSection({
           {entries.map((e) => (
             <li
               key={e.id}
-              className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-800"
+              className="flex items-center justify-between rounded-[2px] border border-line px-3 py-2 text-sm"
             >
               <div>
                 <p className="font-medium">
@@ -450,13 +450,13 @@ function MediaSection({
           {items.map((m) => (
             <li
               key={m.id}
-              className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-800"
+              className="flex items-center justify-between rounded-[2px] border border-line px-3 py-2 text-sm"
             >
               <a
                 href={m.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-teal-600 hover:underline"
+                className="text-link hover:underline"
               >
                 {m.title} <span className="text-xs opacity-60">({m.kind})</span>
               </a>

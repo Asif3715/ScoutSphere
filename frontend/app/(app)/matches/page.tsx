@@ -12,7 +12,7 @@ import { apiFetch } from "@/lib/http";
 import { MATCH_STATUSES, type MatchSummary, type Page } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
 
 function Matches() {
   const { activeOrgId, can } = useAuth();
@@ -52,10 +52,7 @@ function Matches() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Matches</h1>
         {can("matches:manage") && (
-          <Link
-            href="/matches/new"
-            className="rounded-md bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
-          >
+          <Link href="/matches/new" className="btn btn-primary">
             Add match
           </Link>
         )}
@@ -63,7 +60,7 @@ function Matches() {
       {seasonId && (
         <p className="text-sm">
           Filtered to one season.{" "}
-          <Link href="/matches" className="text-teal-600 underline">
+          <Link href="/matches" className="text-link underline">
             Show all matches
           </Link>
         </p>
@@ -122,7 +119,7 @@ function Matches() {
       {data && data.items.length > 0 && (
         <>
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+            <thead className="border-b border-line text-xs uppercase opacity-60">
               <tr>
                 <th className="py-2">Kick-off</th>
                 <th>Match</th>
@@ -133,17 +130,14 @@ function Matches() {
             </thead>
             <tbody>
               {data.items.map((m) => (
-                <tr
-                  key={m.id}
-                  className="border-b border-slate-100 dark:border-slate-900"
-                >
+                <tr key={m.id} className="border-b border-line-soft">
                   <td className="py-2">
                     {new Date(m.kickoff_at).toLocaleString()}
                   </td>
                   <td>
                     <Link
                       href={`/matches/${m.id}`}
-                      className="font-medium text-teal-600 hover:underline"
+                      className="font-medium text-link hover:underline"
                     >
                       {m.home_club_name} v {m.away_club_name}
                     </Link>

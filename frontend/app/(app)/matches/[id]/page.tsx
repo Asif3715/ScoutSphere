@@ -21,7 +21,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-2 py-1 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-2 py-1 text-sm";
 
 export default function MatchPage() {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +45,7 @@ export default function MatchPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{loadError?.message ?? "Match not found"}</ErrorText>
-        <Link href="/matches" className="text-sm text-teal-600 underline">
+        <Link href="/matches" className="text-sm text-link underline">
           Back to matches
         </Link>
       </div>
@@ -70,7 +70,7 @@ export default function MatchPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/matches" className="text-sm text-teal-600 underline">
+      <Link href="/matches" className="text-sm text-link underline">
         ← Matches
       </Link>
       <header className="space-y-1">
@@ -267,7 +267,7 @@ function EventsSection({
           {match.events.map((e) => (
             <li
               key={e.id}
-              className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-1.5 dark:border-slate-800"
+              className="flex items-center justify-between rounded-[2px] border border-line px-3 py-1.5"
             >
               <span>
                 <strong>{e.minute}&apos;</strong>{" "}
@@ -421,10 +421,7 @@ function StatsSection({
         </thead>
         <tbody>
           {STAT_FIELDS.map(([key, label]) => (
-            <tr
-              key={key}
-              className="border-b border-slate-100 dark:border-slate-900"
-            >
+            <tr key={key} className="border-b border-line-soft">
               <td className="py-1">{label}</td>
               {(
                 [

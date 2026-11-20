@@ -22,7 +22,7 @@ import {
 } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export function toRequirementValues(r?: Requirement): RequirementValues {
   const attributes: Record<string, string> = {};
@@ -178,7 +178,7 @@ export function RequirementForm({
                     id={`attr-${a}`}
                     inputMode="numeric"
                     maxLength={2}
-                    className="w-14 rounded-md border border-slate-300 bg-transparent px-2 py-1 text-center text-sm"
+                    className="w-14 rounded-[2px] border border-line-strong bg-transparent px-2 py-1 text-center text-sm"
                     {...register(`attributes.${a}`)}
                   />
                 </div>

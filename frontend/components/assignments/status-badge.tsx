@@ -3,14 +3,18 @@ import { label } from "@/lib/types";
 export function StatusBadge({ status }: { status: string }) {
   const tone =
     status === "approved"
-      ? "bg-green-100 text-green-900"
+      ? "bg-ok-soft text-ok"
       : status === "rejected" || status === "cancelled"
-        ? "bg-red-100 text-red-900"
+        ? "bg-bad-soft text-bad"
         : status === "submitted" || status === "under_review"
-          ? "bg-blue-100 text-blue-900"
-          : "bg-slate-200 text-slate-800";
+          ? "bg-info-soft text-info"
+          : "bg-surface-2 text-ink";
   return (
-    <span className={`rounded px-1.5 py-0.5 text-xs ${tone}`}>
+    <span className={`chip ${tone}`}>
+      <span
+        aria-hidden="true"
+        className="h-1.5 w-1.5 rounded-full bg-current"
+      />
       {label(status)}
     </span>
   );

@@ -25,7 +25,7 @@ import type {
 } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export default function NewAssignmentPage() {
   const { activeOrgId, can } = useAuth();
@@ -118,7 +118,7 @@ export default function NewAssignmentPage() {
           </select>
           <ErrorText>{errors.scout_id?.message}</ErrorText>
           {scouts.data && scouts.data.items.length === 0 && (
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-warn">
               No active scout profiles yet. Members can create one under Scouts.
             </p>
           )}

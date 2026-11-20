@@ -114,7 +114,7 @@ export default function MembersPage() {
 
       {members.data && (
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+          <thead className="border-b border-line text-xs uppercase opacity-60">
             <tr>
               <th className="py-2">Name</th>
               <th>Email</th>
@@ -127,10 +127,7 @@ export default function MembersPage() {
               const isOwnerRow = m.role === "club_owner";
               const locked = isOwnerRow && myRole !== "club_owner";
               return (
-                <tr
-                  key={m.id}
-                  className="border-b border-slate-100 dark:border-slate-900"
-                >
+                <tr key={m.id} className="border-b border-line-soft">
                   <td className="py-2">
                     {m.full_name}
                     {m.user_id === user?.id && (
@@ -148,7 +145,7 @@ export default function MembersPage() {
                           setActionError(null);
                           changeRole.mutate({ id: m.id, role: e.target.value });
                         }}
-                        className="rounded-md border border-slate-300 bg-transparent px-2 py-1"
+                        className="rounded-[2px] border border-line-strong bg-transparent px-2 py-1"
                       >
                         {assignable.map((r) => (
                           <option key={r} value={r}>
@@ -211,7 +208,7 @@ export default function MembersPage() {
                 <select
                   id="role"
                   {...register("role")}
-                  className="w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm"
+                  className="w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm"
                 >
                   {assignable.map((r) => (
                     <option key={r} value={r}>
@@ -225,7 +222,7 @@ export default function MembersPage() {
               </Button>
             </form>
             {lastInvite?.accept_url && (
-              <div className="rounded-md bg-teal-50 p-3 text-sm text-teal-900">
+              <div className="rounded-[2px] border-l-4 border-volt bg-surface-2 p-3 text-sm">
                 <p className="font-medium">
                   Invitation created for {lastInvite.email}.
                 </p>
@@ -238,7 +235,7 @@ export default function MembersPage() {
                   aria-label="Invitation link"
                   value={lastInvite.accept_url}
                   onFocus={(e) => e.currentTarget.select()}
-                  className="mt-2 w-full rounded border border-teal-200 bg-white px-2 py-1 text-xs"
+                  className="mt-2 w-full rounded border border-line-strong bg-surface px-2 py-1 text-xs"
                 />
               </div>
             )}
@@ -252,12 +249,12 @@ export default function MembersPage() {
             {invitations.data?.map((inv) => (
               <div
                 key={inv.id}
-                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-800"
+                className="flex items-center justify-between rounded-[2px] border border-line px-3 py-2 text-sm"
               >
                 <span>
                   {inv.email} · {ROLE_LABELS[inv.role] ?? inv.role}
                   {inv.status === "expired" && (
-                    <span className="ml-2 text-xs text-amber-600">expired</span>
+                    <span className="ml-2 text-xs text-warn">expired</span>
                   )}
                 </span>
                 <Button

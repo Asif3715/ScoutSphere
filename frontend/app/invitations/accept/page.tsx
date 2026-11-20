@@ -80,14 +80,11 @@ function AcceptInvitation() {
                 Sign in or create an account with {preview.email} to accept.
               </p>
               <div className="flex gap-2">
-                <Link
-                  className="rounded-md bg-teal-600 px-3 py-1.5 font-medium text-white"
-                  href={`/login?next=${next}`}
-                >
+                <Link className="btn btn-primary" href={`/login?next=${next}`}>
                   Sign in
                 </Link>
                 <Link
-                  className="rounded-md border border-slate-300 px-3 py-1.5"
+                  className="btn btn-secondary"
                   href={`/register?next=${next}`}
                 >
                   Register

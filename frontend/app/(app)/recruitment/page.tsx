@@ -17,7 +17,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
 
 export default function RecruitmentPage() {
   const { activeOrgId, can } = useAuth();
@@ -50,15 +50,12 @@ export default function RecruitmentPage() {
         <div className="flex gap-2">
           <Link
             href="/recruitment/search"
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="btn btn-secondary text-sm hover:bg-hover"
           >
             Find players
           </Link>
           {can("recruitment:manage") && (
-            <Link
-              href="/recruitment/new"
-              className="rounded-md bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
-            >
+            <Link href="/recruitment/new" className="btn btn-primary">
               New requirement
             </Link>
           )}
@@ -120,7 +117,7 @@ export default function RecruitmentPage() {
       {data && data.items.length > 0 && (
         <>
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+            <thead className="border-b border-line text-xs uppercase opacity-60">
               <tr>
                 <th className="py-2">Requirement</th>
                 <th>Position</th>
@@ -131,14 +128,11 @@ export default function RecruitmentPage() {
             </thead>
             <tbody>
               {data.items.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-b border-slate-100 dark:border-slate-900"
-                >
+                <tr key={r.id} className="border-b border-line-soft">
                   <td className="py-2">
                     <Link
                       href={`/recruitment/${r.id}`}
-                      className="font-medium text-teal-600 hover:underline"
+                      className="font-medium text-link hover:underline"
                     >
                       {r.title}
                     </Link>

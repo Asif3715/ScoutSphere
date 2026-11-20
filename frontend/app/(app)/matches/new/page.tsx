@@ -20,7 +20,7 @@ import type {
 } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export default function NewMatchPage() {
   const { activeOrgId, can } = useAuth();
@@ -141,7 +141,7 @@ export default function NewMatchPage() {
           ))}
         </div>
         {seasonId && clubs.length < 2 && (
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-warn">
             This season needs at least two participating clubs first.
           </p>
         )}

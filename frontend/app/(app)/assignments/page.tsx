@@ -17,7 +17,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
 
 export default function AssignmentsPage() {
   const { activeOrgId, can } = useAuth();
@@ -52,10 +52,7 @@ export default function AssignmentsPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Assignments</h1>
         {can("assignments:manage") && (
-          <Link
-            href="/assignments/new"
-            className="rounded-md bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
-          >
+          <Link href="/assignments/new" className="btn btn-primary">
             New assignment
           </Link>
         )}
@@ -114,7 +111,7 @@ export default function AssignmentsPage() {
       {data && data.items.length > 0 && (
         <>
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+            <thead className="border-b border-line text-xs uppercase opacity-60">
               <tr>
                 <th className="py-2">Assignment</th>
                 <th>Target</th>
@@ -125,14 +122,11 @@ export default function AssignmentsPage() {
             </thead>
             <tbody>
               {data.items.map((a) => (
-                <tr
-                  key={a.id}
-                  className="border-b border-slate-100 dark:border-slate-900"
-                >
+                <tr key={a.id} className="border-b border-line-soft">
                   <td className="py-2">
                     <Link
                       href={`/assignments/${a.id}`}
-                      className="font-medium text-teal-600 hover:underline"
+                      className="font-medium text-link hover:underline"
                     >
                       {a.title}
                     </Link>
@@ -147,7 +141,7 @@ export default function AssignmentsPage() {
                   <td>
                     {a.deadline ? new Date(a.deadline).toLocaleString() : "—"}
                     {a.is_overdue && (
-                      <span className="ml-2 rounded bg-red-100 px-1.5 text-xs text-red-900">
+                      <span className="ml-2 rounded bg-bad-soft px-1.5 text-xs text-bad">
                         overdue
                       </span>
                     )}

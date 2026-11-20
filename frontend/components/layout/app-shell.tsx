@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { LogoMark, Wordmark } from "@/components/brand/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { useAuth } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/types";
@@ -11,93 +12,196 @@ import { ROLE_LABELS } from "@/lib/types";
 // Navigation is role-aware: an item shows only if the user holds its permission.
 // This is a usability nicety; the backend independently authorizes every request.
 const NAV = [
-  { href: "/dashboard", label: "Overview", permission: null },
-  { href: "/clubs", label: "Clubs", permission: "clubs:read" },
-  { href: "/teams", label: "Teams", permission: "clubs:read" },
-  { href: "/players", label: "Players", permission: "players:read" },
-  { href: "/scouts", label: "Scouts", permission: "scouts:read" },
   {
-    href: "/recruitment",
-    label: "Recruitment",
-    permission: "recruitment:read",
+    group: "Club",
+    items: [
+      { href: "/dashboard", label: "Overview", permission: null },
+      { href: "/clubs", label: "Clubs", permission: "clubs:read" },
+      { href: "/teams", label: "Teams", permission: "clubs:read" },
+      { href: "/players", label: "Players", permission: "players:read" },
+    ],
   },
-  { href: "/shortlists", label: "Shortlists", permission: "recruitment:read" },
   {
-    href: "/assignments",
-    label: "Assignments",
-    permission: "assignments:read",
+    group: "Scouting",
+    items: [
+      { href: "/scouts", label: "Scouts", permission: "scouts:read" },
+      {
+        href: "/assignments",
+        label: "Assignments",
+        permission: "assignments:read",
+      },
+      { href: "/reports", label: "Reports", permission: "reports:read" },
+    ],
   },
-  { href: "/reports", label: "Reports", permission: "reports:read" },
-  { href: "/competitions", label: "Competitions", permission: "matches:read" },
-  { href: "/matches", label: "Matches", permission: "matches:read" },
-  { href: "/members", label: "Members", permission: "members:read" },
+  {
+    group: "Recruitment",
+    items: [
+      {
+        href: "/recruitment",
+        label: "Pipeline",
+        permission: "recruitment:read",
+      },
+      {
+        href: "/shortlists",
+        label: "Shortlists",
+        permission: "recruitment:read",
+      },
+    ],
+  },
+  {
+    group: "Fixtures",
+    items: [
+      {
+        href: "/competitions",
+        label: "Competitions",
+        permission: "matches:read",
+      },
+      { href: "/matches", label: "Matches", permission: "matches:read" },
+    ],
+  },
+  {
+    group: "Admin",
+    items: [{ href: "/members", label: "Members", permission: "members:read" }],
+  },
 ] as const;
+
+function today() {
+  return new Date()
+    .toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    })
+    .toUpperCase();
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, memberships, activeOrgId, selectOrg, logout, can } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const active = memberships.find((m) => m.organization_id === activeOrgId);
-  // On phones the sidebar is a slide-over drawer instead of a permanent 224px column.
+  // On phones the sidebar is a slide-over drawer instead of a permanent column.
   const [menuOpen, setMenuOpen] = useState(false);
+
+  let n = 0;
+  const groups = NAV.map((g) => ({
+    group: g.group,
+    items: g.items
+      .filter((i) => i.permission === null || can(i.permission))
+      .map((i) => ({ ...i, n: ++n })),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div className="flex min-h-screen">
       {menuOpen && (
         <div
           aria-hidden="true"
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          className="fixed inset-0 z-30 bg-dugout/70 backdrop-blur-sm md:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
       <aside
         id="main-nav"
-        className={`w-56 shrink-0 border-r border-slate-200 bg-background p-4 dark:border-slate-800 ${
-          menuOpen
-            ? "fixed inset-y-0 left-0 z-40 block overflow-y-auto"
-            : "hidden"
-        } md:static md:z-auto md:block`}
+        className={`w-64 shrink-0 bg-dugout text-dugout-ink ${
+          menuOpen ? "fixed inset-y-0 left-0 z-40 flex" : "hidden"
+        } flex-col md:sticky md:top-0 md:z-auto md:flex md:h-screen`}
       >
-        <Link href="/dashboard" className="block text-lg font-bold">
-          ScoutSphere
+        {/* floodlight glow in the dugout corner */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 [background:radial-gradient(420px_260px_at_0%_0%,rgb(198_244_50/0.10),transparent_70%)]"
+        />
+        <Link
+          href="/dashboard"
+          className="relative flex items-center gap-2.5 px-5 pt-6 pb-5"
+        >
+          <LogoMark className="h-9 w-9 text-dugout-ink" />
+          <Wordmark />
         </Link>
-        <nav className="mt-6 space-y-1" aria-label="Main">
-          {NAV.filter((i) => i.permission === null || can(i.permission)).map(
-            (item) => {
-              const current =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMenuOpen(false)}
-                  aria-current={current ? "page" : undefined}
-                  className={`block rounded-md px-3 py-2 text-sm ${
-                    current
-                      ? "bg-teal-600 text-white"
-                      : "hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            },
-          )}
+        <nav
+          className="relative flex-1 space-y-5 overflow-y-auto px-3 pb-6 [scrollbar-color:rgb(255_255_255/0.14)_transparent] [scrollbar-width:thin]"
+          aria-label="Main"
+        >
+          {groups.map((g) => (
+            <div key={g.group}>
+              <p className="eyebrow px-2 pb-1.5 text-dugout-ink/40">
+                {g.group}
+              </p>
+              <ul>
+                {g.items.map((item) => {
+                  const current =
+                    pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        aria-current={current ? "page" : undefined}
+                        className={`group relative flex items-center gap-3 rounded-[2px] px-2 py-1.5 text-[0.95rem] transition-colors ${
+                          current
+                            ? "bg-volt/10 text-volt"
+                            : "text-dugout-ink/75 hover:bg-white/5 hover:text-dugout-ink"
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 bg-volt transition-transform duration-300 ${
+                            current
+                              ? "scale-y-100"
+                              : "scale-y-0 group-hover:scale-y-50"
+                          }`}
+                        />
+                        <span
+                          aria-hidden="true"
+                          className="w-5 pl-1 font-mono text-[0.62rem] tabular-nums opacity-50"
+                        >
+                          {String(item.n).padStart(2, "0")}
+                        </span>
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
+        <div className="relative border-t border-white/10 px-5 py-4">
+          <p className="truncate text-sm font-semibold">{user?.full_name}</p>
+          <p className="eyebrow mt-0.5 text-volt/80">
+            {active
+              ? (ROLE_LABELS[active.role] ?? active.role)
+              : (user?.platform_role ?? "member")}
+          </p>
+          <button
+            onClick={async () => {
+              await logout();
+              router.replace("/login");
+            }}
+            className="eyebrow mt-3 text-dugout-ink/60 underline-offset-4 transition-colors hover:text-volt hover:underline"
+          >
+            Sign out →
+          </button>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 md:px-6 dark:border-slate-800">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper/85 px-4 py-3 backdrop-blur-md md:px-8">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="rounded-md border border-slate-300 px-3 py-1 text-sm md:hidden"
+              className="btn btn-secondary px-2.5 md:hidden"
               aria-label="Open menu"
               aria-expanded={menuOpen}
               aria-controls="main-nav"
               onClick={() => setMenuOpen((o) => !o)}
             >
-              ☰
+              <span aria-hidden="true" className="block w-4 space-y-1">
+                <span className="block h-px bg-current" />
+                <span className="block h-px bg-current" />
+                <span className="block h-px bg-current" />
+              </span>
             </button>
             {memberships.length > 0 ? (
               <>
@@ -111,7 +215,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     selectOrg(e.target.value);
                     router.push("/dashboard");
                   }}
-                  className="rounded-md border border-slate-300 bg-transparent px-2 py-1 text-sm"
+                  className="font-display max-w-[60vw] cursor-pointer truncate border-0 bg-transparent pr-1 text-xl font-bold uppercase [font-variation-settings:'opsz'_40] focus:ring-0"
                 >
                   {memberships.map((m) => (
                     <option key={m.organization_id} value={m.organization_id}>
@@ -119,33 +223,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </option>
                   ))}
                 </select>
-                {active && (
-                  <span className="text-xs opacity-70">
-                    {ROLE_LABELS[active.role] ?? active.role}
-                  </span>
-                )}
               </>
             ) : (
-              <span className="text-sm opacity-70">No organization</span>
+              <span className="eyebrow opacity-70">No organization</span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <NotificationBell />
-            <span className="hidden opacity-70 sm:inline">
-              {user?.full_name}
+          <div className="flex items-center gap-4">
+            <span className="eyebrow hidden items-center gap-2 opacity-60 sm:flex">
+              <span
+                aria-hidden="true"
+                className="live-dot h-1.5 w-1.5 rounded-full bg-ok"
+              />
+              Matchday · {today()}
             </span>
-            <button
-              onClick={async () => {
-                await logout();
-                router.replace("/login");
-              }}
-              className="rounded-md border border-slate-300 px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              Sign out
-            </button>
+            <NotificationBell />
           </div>
         </header>
-        <main className="min-w-0 flex-1 p-4 md:p-6">{children}</main>
+        <main
+          key={pathname}
+          className="page-reveal mx-auto w-full max-w-6xl min-w-0 flex-1 px-4 py-6 md:px-8 md:py-10"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

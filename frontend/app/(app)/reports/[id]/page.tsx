@@ -59,7 +59,7 @@ export default function ReportPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{loadError?.message ?? "Report not found"}</ErrorText>
-        <Link href="/reports" className="text-sm text-teal-600 underline">
+        <Link href="/reports" className="text-sm text-link underline">
           Back to reports
         </Link>
       </div>
@@ -118,7 +118,7 @@ export default function ReportPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/reports" className="text-sm text-teal-600 underline">
+      <Link href="/reports" className="text-sm text-link underline">
         ← Reports
       </Link>
       <header className="space-y-1">
@@ -138,7 +138,7 @@ export default function ReportPage() {
             Assignment:{" "}
             <Link
               href={`/assignments/${r.assignment_id}`}
-              className="text-teal-600 underline"
+              className="text-link underline"
             >
               {r.assignment_title}
             </Link>
@@ -148,7 +148,7 @@ export default function ReportPage() {
       <ErrorText>{error}</ErrorText>
 
       {r.status === "revision_requested" && r.reviews.length > 0 && (
-        <Card className="border-amber-400 bg-amber-50 text-sm text-amber-950">
+        <Card className="border-warn bg-warn-soft text-sm text-warn">
           <p className="font-semibold">Revision requested</p>
           <p>{r.reviews[r.reviews.length - 1].comment}</p>
         </Card>
@@ -172,7 +172,7 @@ export default function ReportPage() {
             )}
           </div>
           {missing.length > 0 && (
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-warn">
               Before submitting, add: {missing.join(", ")}.
             </p>
           )}
@@ -208,7 +208,7 @@ export default function ReportPage() {
                 onChange={(e) =>
                   setVersion(e.target.value ? Number(e.target.value) : null)
                 }
-                className="rounded-md border border-slate-300 bg-transparent px-2 py-1"
+                className="rounded-[2px] border border-line-strong bg-transparent px-2 py-1"
               >
                 <option value="">current</option>
                 {r.versions.map((v) => (
@@ -299,7 +299,7 @@ export default function ReportPage() {
               Comment (required unless approving)
               <textarea
                 rows={3}
-                className="mt-1 w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm"
                 {...review.register("comment")}
               />
             </label>
@@ -318,7 +318,7 @@ export default function ReportPage() {
             {r.reviews.map((rv, i) => (
               <li
                 key={i}
-                className="rounded-md border border-slate-200 px-3 py-1.5 dark:border-slate-800"
+                className="rounded-[2px] border border-line px-3 py-1.5"
               >
                 <strong>{label(rv.decision)}</strong> on v{rv.version} by{" "}
                 {rv.reviewer_name ?? "unknown"}{" "}

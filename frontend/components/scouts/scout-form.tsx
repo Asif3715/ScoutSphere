@@ -11,7 +11,7 @@ import { scoutPayload, scoutSchema, type ScoutValues } from "@/lib/schemas";
 import { AGE_GROUPS, POSITIONS, type Member, type Scout } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export function toScoutValues(s?: Scout): ScoutValues {
   return {

@@ -103,10 +103,8 @@ export default function NotificationsPage() {
             {list.data.items.map((n) => (
               <li
                 key={n.id}
-                className={`flex items-start justify-between gap-3 rounded-md border px-3 py-2 text-sm ${
-                  n.read
-                    ? "border-slate-200 opacity-70 dark:border-slate-800"
-                    : "border-teal-400"
+                className={`flex items-start justify-between gap-3 rounded-[2px] border px-3 py-2 text-sm ${
+                  n.read ? "border-line opacity-70" : "border-volt"
                 }`}
               >
                 <div>
@@ -114,13 +112,13 @@ export default function NotificationsPage() {
                     {!n.read && (
                       <span
                         aria-label="unread"
-                        className="mr-2 inline-block size-2 rounded-full bg-teal-600"
+                        className="mr-2 inline-block size-2 rounded-full bg-accent"
                       />
                     )}
                     {n.link_path ? (
                       <Link
                         href={n.link_path}
-                        className="text-teal-600 hover:underline"
+                        className="text-link hover:underline"
                         onClick={() => !n.read && markRead.mutate(n.id)}
                       >
                         {n.title}

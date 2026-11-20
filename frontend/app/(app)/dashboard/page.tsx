@@ -3,10 +3,55 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
-import { Card, ErrorText, Stat } from "@/components/ui/ui";
+import { ErrorText, Stat } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/http";
 import type { Dashboard } from "@/lib/types";
+
+const QUICK = [
+  {
+    href: "/players",
+    title: "Players",
+    body: "Search the player database and open dossiers.",
+    permission: "players:read",
+  },
+  {
+    href: "/assignments",
+    title: "Assignments",
+    body: "Who is watching which match, and by when.",
+    permission: "assignments:read",
+  },
+  {
+    href: "/reports",
+    title: "Reports",
+    body: "Write, submit and review scouting reports.",
+    permission: "reports:read",
+  },
+  {
+    href: "/recruitment",
+    title: "Recruitment",
+    body: "Requirements, matching players and the pipeline.",
+    permission: "recruitment:read",
+  },
+  {
+    href: "/shortlists",
+    title: "Shortlists",
+    body: "Your private lists, and those shared with you.",
+    permission: "recruitment:read",
+  },
+  {
+    href: "/members",
+    title: "Members",
+    body: "Invite scouts, coaches and recruitment managers.",
+    permission: "members:manage",
+  },
+  {
+    href: "/clubs/new",
+    title: "Register a club",
+    body: "Add a club your organization manages.",
+    permission: "clubs:manage",
+  },
+] as const;
 
 export default function DashboardPage() {
   const { user, activeOrgId, can } = useAuth();
@@ -33,6 +78,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <header>
+        <p className="eyebrow mb-3 text-link">
+          Welcome back, {user?.full_name?.split(" ")[0]}
+        </p>
         <h1 className="text-2xl font-bold">
           {data?.organization.name ?? "Overview"}
         </h1>
@@ -55,28 +103,31 @@ export default function DashboardPage() {
               value={data.pending_invitations}
             />
           </section>
-          <Card>
-            <h2 className="font-semibold">Get started</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-              {can("clubs:manage") && (
-                <li>
-                  <Link className="text-teal-600 underline" href="/clubs/new">
-                    Register a club
+          <section aria-label="Quick actions">
+            <h3 className="mb-3 opacity-60">Quick actions</h3>
+            <ul className="grid overflow-hidden rounded-[3px] border-t border-l border-line sm:grid-cols-2 lg:grid-cols-3">
+              {QUICK.filter((q) => can(q.permission)).map((q, i) => (
+                <li key={q.href} className="border-r border-b border-line">
+                  <Link
+                    href={q.href}
+                    className="group flex h-full flex-col bg-surface p-5 transition-colors hover:bg-paper"
+                  >
+                    <span className="font-mono text-xs text-link">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="font-display mt-4 text-2xl leading-none font-bold uppercase">
+                      {q.title}
+                    </span>
+                    <span className="mt-2 text-sm opacity-70">{q.body}</span>
+                    <span
+                      aria-hidden="true"
+                      className="mt-4 block h-[3px] w-6 bg-volt transition-all duration-500 group-hover:w-full"
+                    />
                   </Link>
                 </li>
-              )}
-              {can("members:manage") && (
-                <li>
-                  <Link className="text-teal-600 underline" href="/members">
-                    Invite scouts, coaches and recruitment managers
-                  </Link>
-                </li>
-              )}
-              <li className="opacity-70">
-                Players, scouts and matches arrive in the next phases.
-              </li>
+              ))}
             </ul>
-          </Card>
+          </section>
         </>
       )}
     </div>

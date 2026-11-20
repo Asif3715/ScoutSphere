@@ -16,7 +16,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
 type Filters = {
   q: string;
   position: string;
@@ -62,10 +62,7 @@ export default function ScoutsPage() {
     <div className="space-y-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Scouts</h1>
-        <Link
-          href="/scouts/new"
-          className="rounded-md bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
-        >
+        <Link href="/scouts/new" className="btn btn-primary">
           {can("scouts:manage") ? "Add scout profile" : "Create my profile"}
         </Link>
       </header>
@@ -153,18 +150,15 @@ export default function ScoutsPage() {
         <>
           <ul className="grid gap-3 sm:grid-cols-2" aria-label="Scouts">
             {data.items.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-lg border border-slate-200 p-4 dark:border-slate-800"
-              >
+              <li key={s.id} className="rounded-[3px] border border-line p-4">
                 <Link
                   href={`/scouts/${s.id}`}
-                  className="font-semibold text-teal-600 hover:underline"
+                  className="font-semibold text-link hover:underline"
                 >
                   {s.full_name}
                 </Link>
                 {!s.is_active && (
-                  <span className="ml-2 rounded bg-slate-200 px-1.5 text-xs text-slate-700">
+                  <span className="ml-2 rounded bg-surface-2 px-1.5 text-xs text-ink/70">
                     inactive
                   </span>
                 )}

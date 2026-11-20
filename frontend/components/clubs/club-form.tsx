@@ -116,7 +116,7 @@ export function ClubForm({
         <textarea
           id="description"
           rows={4}
-          className="w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm"
+          className="w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm"
           {...register("description")}
         />
         <ErrorText>{errors.description?.message}</ErrorText>

@@ -33,7 +33,7 @@ export default function ScoutPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{loadError?.message ?? "Scout not found"}</ErrorText>
-        <Link href="/scouts" className="text-sm text-teal-600 underline">
+        <Link href="/scouts" className="text-sm text-link underline">
           Back to scouts
         </Link>
       </div>
@@ -59,7 +59,7 @@ export default function ScoutPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/scouts" className="text-sm text-teal-600 underline">
+      <Link href="/scouts" className="text-sm text-link underline">
         ← Scouts
       </Link>
       <header className="flex items-start justify-between gap-4">
@@ -67,7 +67,7 @@ export default function ScoutPage() {
           <h1 className="text-2xl font-bold">
             {scout.full_name}
             {!scout.is_active && (
-              <span className="ml-2 rounded bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+              <span className="ml-2 rounded bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink/70">
                 Inactive
               </span>
             )}

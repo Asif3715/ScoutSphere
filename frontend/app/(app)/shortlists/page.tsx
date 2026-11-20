@@ -14,7 +14,7 @@ import { shortlistSchema, type ShortlistValues } from "@/lib/schemas";
 import { PRIORITIES, type Page, type ShortlistSummary } from "@/lib/types";
 
 const select =
-  "w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
 
 export default function ShortlistsPage() {
   const { activeOrgId, can } = useAuth();
@@ -92,13 +92,10 @@ export default function ShortlistsPage() {
         <>
           <ul className="grid gap-3 sm:grid-cols-2">
             {data.items.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-lg border border-slate-200 p-4 dark:border-slate-800"
-              >
+              <li key={s.id} className="rounded-[3px] border border-line p-4">
                 <Link
                   href={`/shortlists/${s.id}`}
-                  className="font-semibold text-teal-600 hover:underline"
+                  className="font-semibold text-link hover:underline"
                 >
                   {s.name}
                 </Link>

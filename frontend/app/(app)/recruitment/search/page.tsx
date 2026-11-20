@@ -20,7 +20,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
 const EMPTY = {
   q: "",
   position: "",
@@ -106,7 +106,7 @@ export default function SearchPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/recruitment" className="text-sm text-teal-600 underline">
+      <Link href="/recruitment" className="text-sm text-link underline">
         ← Recruitment
       </Link>
       <h1 className="text-2xl font-bold">Find players</h1>
@@ -216,7 +216,7 @@ export default function SearchPage() {
                         onChange={(e) =>
                           setRatings((r) => ({ ...r, [a]: e.target.value }))
                         }
-                        className="w-14 rounded-md border border-slate-300 bg-transparent px-2 py-1 text-center"
+                        className="w-14 rounded-[2px] border border-line-strong bg-transparent px-2 py-1 text-center"
                       />
                     </label>
                   ))}
@@ -243,7 +243,7 @@ export default function SearchPage() {
       </Card>
 
       <ErrorText>{error ?? results.error?.message}</ErrorText>
-      {message && <p className="text-sm text-green-700">{message}</p>}
+      {message && <p className="text-sm text-ok">{message}</p>}
       {!applied && <Empty>Set some filters and press Search.</Empty>}
       {results.isLoading && <p aria-busy="true">Searching…</p>}
       {results.data && results.data.items.length === 0 && (
@@ -266,7 +266,7 @@ export default function SearchPage() {
                 aria-label="Shortlist"
                 value={shortlistId}
                 onChange={(e) => setShortlistId(e.target.value)}
-                className="rounded-md border border-slate-300 bg-transparent px-2 py-1"
+                className="rounded-[2px] border border-line-strong bg-transparent px-2 py-1"
               >
                 <option value="">Add to shortlist…</option>
                 {shortlists.data?.items.map((s) => (
@@ -286,7 +286,7 @@ export default function SearchPage() {
         {results.data?.items.map((m) => (
           <li
             key={m.player.id}
-            className="flex items-start gap-2 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800"
+            className="flex items-start gap-2 rounded-[2px] border border-line p-3 text-sm"
           >
             <input
               type="checkbox"
@@ -298,7 +298,7 @@ export default function SearchPage() {
             <div>
               <Link
                 href={`/players/${m.player.id}`}
-                className="font-medium text-teal-600 hover:underline"
+                className="font-medium text-link hover:underline"
               >
                 {m.player.full_name}
               </Link>{" "}
@@ -307,7 +307,7 @@ export default function SearchPage() {
                 {m.player.current_club?.club_name ?? "no club"}
               </span>
               {m.in_pipeline && (
-                <span className="ml-2 rounded bg-blue-100 px-1.5 text-xs text-blue-900">
+                <span className="ml-2 rounded bg-info-soft px-1.5 text-xs text-info">
                   in a pipeline
                 </span>
               )}
@@ -315,7 +315,7 @@ export default function SearchPage() {
                 {m.criteria.map((c) => (
                   <li
                     key={c.name}
-                    className="rounded bg-green-100 px-1.5 py-0.5 text-green-900"
+                    className="rounded bg-ok-soft px-1.5 py-0.5 text-ok"
                   >
                     ✓ {c.name}: {c.actual ?? "—"}
                   </li>

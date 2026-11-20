@@ -63,7 +63,7 @@ export default function OnboardingPage() {
             <textarea
               id="description"
               rows={3}
-              className="w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm"
+              className="w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm"
               {...register("description")}
             />
           </div>

@@ -17,7 +17,7 @@ import {
 } from "@/lib/types";
 
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-2 py-1 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-2 py-1 text-sm";
 
 export default function TeamPage() {
   const { id } = useParams<{ id: string }>();
@@ -72,7 +72,7 @@ export default function TeamPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{squad.error?.message ?? "Team not found"}</ErrorText>
-        <Link href="/teams" className="text-sm text-teal-600 underline">
+        <Link href="/teams" className="text-sm text-link underline">
           Back to teams
         </Link>
       </div>
@@ -82,7 +82,7 @@ export default function TeamPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/teams" className="text-sm text-teal-600 underline">
+      <Link href="/teams" className="text-sm text-link underline">
         ← Teams
       </Link>
       <header>
@@ -131,7 +131,7 @@ export default function TeamPage() {
         <Empty>No players in this squad.</Empty>
       ) : (
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+          <thead className="border-b border-line text-xs uppercase opacity-60">
             <tr>
               <th className="py-2">No.</th>
               <th>Player</th>
@@ -145,18 +145,18 @@ export default function TeamPage() {
             {players.map((p) => (
               <tr
                 key={p.membership_id}
-                className={`border-b border-slate-100 dark:border-slate-900 ${p.status === "left" ? "opacity-50" : ""}`}
+                className={`border-b border-line-soft ${p.status === "left" ? "opacity-50" : ""}`}
               >
                 <td className="py-2">{p.squad_number ?? "—"}</td>
                 <td>
                   <Link
                     href={`/players/${p.player_id}`}
-                    className="font-medium text-teal-600 hover:underline"
+                    className="font-medium text-link hover:underline"
                   >
                     {p.full_name}
                   </Link>
                   {p.is_minor && (
-                    <span className="ml-2 rounded bg-amber-100 px-1.5 text-xs text-amber-900">
+                    <span className="ml-2 rounded bg-warn-soft px-1.5 text-xs text-warn">
                       U18
                     </span>
                   )}

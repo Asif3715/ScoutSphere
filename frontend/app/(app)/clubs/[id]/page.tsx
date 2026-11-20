@@ -34,7 +34,7 @@ export default function ClubDetailPage() {
     return (
       <div className="space-y-2">
         <ErrorText>{error?.message ?? "Club not found"}</ErrorText>
-        <Link href="/clubs" className="text-sm text-teal-600 underline">
+        <Link href="/clubs" className="text-sm text-link underline">
           Back to clubs
         </Link>
       </div>
@@ -65,7 +65,7 @@ export default function ClubDetailPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/clubs" className="text-sm text-teal-600 underline">
+      <Link href="/clubs" className="text-sm text-link underline">
         ← Clubs
       </Link>
       <header className="flex items-start justify-between gap-4">

@@ -11,7 +11,7 @@ import { POSITION_GROUPS, type Page, type PlayerSummary } from "@/lib/types";
 
 const PAGE_SIZE = 15;
 const input =
-  "rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-sm";
+  "rounded-[2px] border border-line-strong bg-transparent px-3 py-1.5 text-sm";
 
 type Filters = {
   q: string;
@@ -61,10 +61,7 @@ export default function PlayersPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Players</h1>
         {can("players:write") && (
-          <Link
-            href="/players/new"
-            className="rounded-md bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
-          >
+          <Link href="/players/new" className="btn btn-primary">
             Add player
           </Link>
         )}
@@ -163,7 +160,7 @@ export default function PlayersPage() {
       {data && data.items.length > 0 && (
         <>
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase opacity-60 dark:border-slate-800">
+            <thead className="border-b border-line text-xs uppercase opacity-60">
               <tr>
                 <th className="py-2">Name</th>
                 <th>Age</th>
@@ -174,19 +171,16 @@ export default function PlayersPage() {
             </thead>
             <tbody>
               {data.items.map((p) => (
-                <tr
-                  key={p.id}
-                  className="border-b border-slate-100 dark:border-slate-900"
-                >
+                <tr key={p.id} className="border-b border-line-soft">
                   <td className="py-2">
                     <Link
                       href={`/players/${p.id}`}
-                      className="font-medium text-teal-600 hover:underline"
+                      className="font-medium text-link hover:underline"
                     >
                       {p.full_name}
                     </Link>
                     {p.is_minor && (
-                      <span className="ml-2 rounded bg-amber-100 px-1.5 text-xs text-amber-900">
+                      <span className="ml-2 rounded bg-warn-soft px-1.5 text-xs text-warn">
                         U18
                       </span>
                     )}
