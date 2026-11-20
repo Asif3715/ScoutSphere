@@ -17,6 +17,12 @@ const NAV = [
   { href: "/players", label: "Players", permission: "players:read" },
   { href: "/scouts", label: "Scouts", permission: "scouts:read" },
   {
+    href: "/recruitment",
+    label: "Recruitment",
+    permission: "recruitment:read",
+  },
+  { href: "/shortlists", label: "Shortlists", permission: "recruitment:read" },
+  {
     href: "/assignments",
     label: "Assignments",
     permission: "assignments:read",

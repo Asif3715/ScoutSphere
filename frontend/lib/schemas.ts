@@ -412,3 +412,104 @@ export const reviewSchema = z
     message: "Explain your decision to the scout",
   });
 export type ReviewValues = z.infer<typeof reviewSchema>;
+
+// ---- recruitment -----------------------------------------------------------------------
+export const requirementSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(3, "Title must be at least 3 characters")
+      .max(200),
+    position: z.string().min(1, "Choose a position"),
+    min_age: numStr("Minimum age", 8, 60),
+    max_age: numStr("Maximum age", 8, 60),
+    nationality: z.string().trim().max(100).optional(),
+    preferred_foot: z.enum(["", "left", "right", "both"]).optional(),
+    min_appearances: numStr("Appearances", 0, 5000),
+    budget_min: z.string().trim().regex(/^\d*$/, "Whole number").optional(),
+    budget_max: z.string().trim().regex(/^\d*$/, "Whole number").optional(),
+    currency: z
+      .string()
+      .trim()
+      .regex(/^([A-Za-z]{3})?$/, "Three letters, e.g. EUR")
+      .optional(),
+    contract_notes: z.string().max(3000).optional(),
+    instructions: z.string().max(5000).optional(),
+    priority: z.enum(["low", "medium", "high", "urgent"]),
+    attributes: z.record(z.string(), rating),
+  })
+  .superRefine((v, ctx) => {
+    const n = (s?: string) => (s && s !== "" ? Number(s) : null);
+    if (
+      n(v.min_age) != null &&
+      n(v.max_age) != null &&
+      n(v.min_age)! > n(v.max_age)!
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["max_age"],
+        message: "Maximum age must not be below the minimum",
+      });
+    if (
+      n(v.budget_min) != null &&
+      n(v.budget_max) != null &&
+      n(v.budget_min)! > n(v.budget_max)!
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["budget_max"],
+        message: "Maximum budget must not be below the minimum",
+      });
+    if ((n(v.budget_min) != null || n(v.budget_max) != null) && !v.currency)
+      ctx.addIssue({
+        code: "custom",
+        path: ["currency"],
+        message: "Choose a currency for the budget",
+      });
+  });
+export type RequirementValues = z.infer<typeof requirementSchema>;
+
+export function requirementPayload(v: RequirementValues) {
+  const blank = (s?: string) => (s && s.trim() !== "" ? s.trim() : null);
+  const num = (s?: string) => (s && s.trim() !== "" ? Number(s) : null);
+  const attributes: Record<string, number> = {};
+  for (const [k, val] of Object.entries(v.attributes ?? {}))
+    if (val && val !== "") attributes[k] = Number(val);
+  return {
+    title: v.title.trim(),
+    position: v.position,
+    min_age: num(v.min_age),
+    max_age: num(v.max_age),
+    nationality: blank(v.nationality),
+    preferred_foot: blank(v.preferred_foot),
+    min_appearances: num(v.min_appearances),
+    budget_min: num(v.budget_min),
+    budget_max: num(v.budget_max),
+    currency: blank(v.currency)?.toUpperCase() ?? null,
+    contract_notes: blank(v.contract_notes),
+    instructions: blank(v.instructions),
+    priority: v.priority,
+    attributes,
+  };
+}
+
+export const shortlistSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(200),
+  description: z.string().max(3000).optional(),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  requirement_id: z.string().optional(),
+});
+export type ShortlistValues = z.infer<typeof shortlistSchema>;
+
+export const stageMoveSchema = z.object({
+  to: z.string().min(1, "Choose a stage"),
+  note: z.string().max(500).optional(),
+});
+
+/** "passing:7" filters from the discovery form. */
+export function ratingFilters(values: Record<string, string>): string[] {
+  return Object.entries(values)
+    .filter(([, v]) => v && /^\d+$/.test(v) && +v >= 1 && +v <= 10)
+    .map(([k, v]) => `${k}:${v}`);
+}
