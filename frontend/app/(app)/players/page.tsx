@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 
+import { PlayerAvatar } from "@/components/players/player-avatar";
 import { Button, Empty, ErrorText, Pagination } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/http";
@@ -173,6 +174,12 @@ export default function PlayersPage() {
               {data.items.map((p) => (
                 <tr key={p.id} className="border-b border-line-soft">
                   <td className="py-2">
+                    <PlayerAvatar
+                      name={p.full_name}
+                      src={p.photo_thumb_url}
+                      size="sm"
+                      className="mr-2 align-middle"
+                    />
                     <Link
                       href={`/players/${p.id}`}
                       className="font-medium text-link hover:underline"

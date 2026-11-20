@@ -7,6 +7,7 @@ from app.api.v1 import (
     competitions,
     health,
     matches,
+    media,
     notifications,
     organizations,
     platform,
@@ -34,3 +35,4 @@ api_router.include_router(assignments.router)
 api_router.include_router(reports.router)
 api_router.include_router(recruitment.router)
 api_router.include_router(shortlists.router)
+api_router.include_router(media.router)

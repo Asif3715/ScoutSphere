@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { PlayerAvatar } from "@/components/players/player-avatar";
 import { Button, Card, Empty, ErrorText, Pagination } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
@@ -296,6 +297,12 @@ export default function SearchPage() {
               onChange={(e) => toggle(m.player.id, e.target.checked)}
             />
             <div>
+              <PlayerAvatar
+                name={m.player.full_name}
+                src={m.player.photo_thumb_url}
+                size="xs"
+                className="mr-2 align-middle"
+              />
               <Link
                 href={`/players/${m.player.id}`}
                 className="font-medium text-link hover:underline"

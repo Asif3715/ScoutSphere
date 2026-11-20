@@ -13,6 +13,10 @@ MAX_BODY_BYTES = 1_048_576  # 1 MiB: far above any legitimate JSON payload in th
 # backslashes before the backslash that starts the escape).
 _NUL_ESCAPE = re.compile(rb"(?<!\\)(?:\\\\)*\\u0000")
 _BODY_METHODS = {"POST", "PUT", "PATCH"}
+# Binary uploads: a larger cap, and no NUL scan (every image contains NUL bytes). Only these
+# exact routes, and only as multipart/form-data; everything else keeps the strict rules.
+_UPLOAD_PATH = re.compile(r"^/api/v1/players/[0-9a-fA-F-]{36}/photo$")
+UPLOAD_MAX_BYTES = 5 * 1024 * 1024 + 64 * 1024  # 5 MB photo + multipart overhead
 
 
 def _json_response(status: int, code: str, message: str) -> tuple[Message, Message]:
@@ -53,8 +57,14 @@ class RequestGuardMiddleware:
             await self.app(scope, receive, send)
             return
 
-        declared = dict(scope["headers"]).get(b"content-length")
-        if declared and declared.isdigit() and int(declared) > self.max_body:
+        headers = dict(scope["headers"])
+        upload = bool(_UPLOAD_PATH.match(scope.get("path", ""))) and headers.get(
+            b"content-type", b""
+        ).startswith(b"multipart/form-data")
+        max_body = UPLOAD_MAX_BYTES if upload else self.max_body
+
+        declared = headers.get(b"content-length")
+        if declared and declared.isdigit() and int(declared) > max_body:
             for message in _json_response(413, "payload_too_large", "Request body is too large"):
                 await send(message)
             return
@@ -67,7 +77,7 @@ class RequestGuardMiddleware:
                 return
             chunk = message.get("body", b"")
             size += len(chunk)
-            if size > self.max_body:
+            if size > max_body:
                 for m in _json_response(413, "payload_too_large", "Request body is too large"):
                     await send(m)
                 return
@@ -76,7 +86,7 @@ class RequestGuardMiddleware:
                 break
         body = b"".join(chunks)
 
-        if b"\x00" in body or _NUL_ESCAPE.search(body):
+        if not upload and (b"\x00" in body or _NUL_ESCAPE.search(body)):
             for m in _json_response(422, "invalid_characters", "Null characters are not allowed"):
                 await send(m)
             return

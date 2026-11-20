@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     refresh_cookie_name: str = "refresh_token"
     cookie_secure: bool = False  # True behind HTTPS in staging/production
 
+    # Uploaded media (player photos). Local disk now; the storage layer is an interface so
+    # object storage (S3 / MinIO) can replace it without touching callers.
+    media_root: str = "media"
+    photo_max_bytes: int = 5 * 1024 * 1024
+    media_url_hours: int = 24  # lifetime of signed photo URLs (rounded to stay cacheable)
+
     @property
     def sync_database_url(self) -> str:
         """Sync URL used by Alembic."""

@@ -150,5 +150,19 @@ Pipeline stages: discovered, shortlisted, scout_assigned, under_evaluation, tria
 
 New error codes: `invalid_transition`, `same_stage`, `requirement_closed`, `already_candidate`, `already_shortlisted`, `invalid_player`, `invalid_requirement`, `invalid_selection`, `invalid_user`, `not_editable`.
 
+## Player photos
+
+| Endpoint | Purpose |
+|---|---|
+| `PUT /players/{id}/photo` | Multipart upload (`file`, optional `crop_x`, `crop_y`, `crop_size` in pixels of the upright image). Same rights as editing the player. Replaces any previous photo. |
+| `DELETE /players/{id}/photo` | Removes the uploaded photo and any external photo link. |
+| `GET /media/{key}?exp=&sig=` | Serves a stored image through an HMAC-signed, expiring URL (no bearer token, so `<img>` tags work). Any failure is a plain 404. |
+
+Players carry `photo_url`, `photo_thumb_url` (signed paths; prefix with the API origin) and `has_uploaded_photo`; summaries (lists, shortlists, pipeline, comparison) carry `photo_thumb_url`. An uploaded photo wins over the legacy `profile_picture_url` link. Photos of minors are withheld from other organizations, as biographies are.
+
+Processing: JPEG, PNG or WebP up to 5 MB, at least 100x100. Decoded with Pillow (decompression bombs rejected), rotated upright from EXIF, cropped to a square, resized to 640 px and 160 px, re-encoded as WebP. Re-encoding drops all metadata (GPS, camera). Only the processed files are kept. The request guard allows a larger multipart body, without the NUL-byte check, on this one route only.
+
+New error codes: `photo_too_large` (413), `photo_too_small`, `unsupported_photo_type`, `invalid_photo`, `invalid_crop`.
+
 ## Planned (later phases)
 Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.

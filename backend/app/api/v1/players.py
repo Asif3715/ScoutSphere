@@ -1,10 +1,11 @@
 import uuid
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_permission
+from app.core.errors import AppError
 from app.db.session import get_db
 from app.domain.football import POSITION_GROUPS
 from app.permissions import catalog
@@ -24,7 +25,7 @@ from app.schemas.players import (
     PlayerUpdate,
     Position,
 )
-from app.services import player_records, players
+from app.services import media, player_records, players
 
 router = APIRouter(prefix="/players", tags=["players"])
 read = require_permission(catalog.PLAYERS_READ)
@@ -157,3 +158,33 @@ async def delete_media(
 ):
     await player_records.delete_media(db, ctx, player_id, media_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put("/{player_id}/photo", response_model=PlayerOut)
+async def upload_photo(
+    player_id: uuid.UUID,
+    file: UploadFile = File(...),
+    crop_x: int | None = Form(default=None, ge=0),
+    crop_y: int | None = Form(default=None, ge=0),
+    crop_size: int | None = Form(default=None, ge=1),
+    ctx: AuthContext = Depends(write),
+    db: AsyncSession = Depends(get_db),
+):
+    """Multipart upload. Optional crop (pixels of the upright original) selects the square."""
+    limit = media.get_settings().photo_max_bytes
+    data = await file.read(limit + 1)
+    crop = None
+    if crop_x is not None or crop_y is not None or crop_size is not None:
+        if None in (crop_x, crop_y, crop_size):
+            raise AppError(422, "invalid_crop", "Send crop_x, crop_y and crop_size together")
+        crop = media.Crop(crop_x, crop_y, crop_size)
+    return await players.set_photo(db, ctx, player_id, data, crop)
+
+
+@router.delete("/{player_id}/photo", response_model=PlayerOut)
+async def delete_photo(
+    player_id: uuid.UUID,
+    ctx: AuthContext = Depends(write),
+    db: AsyncSession = Depends(get_db),
+):
+    return await players.remove_photo(db, ctx, player_id)

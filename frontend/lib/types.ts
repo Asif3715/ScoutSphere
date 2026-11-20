@@ -115,6 +115,8 @@ export type PlayerSummary = {
   primary_position: string | null;
   current_club: CurrentClub | null;
   is_owner: boolean;
+  /** Signed path (or external link) to a 160px square; null when none or withheld. */
+  photo_thumb_url: string | null;
 };
 
 export type Player = PlayerSummary & {
@@ -125,6 +127,8 @@ export type Player = PlayerSummary & {
   secondary_positions: string[];
   biography: string | null;
   profile_picture_url: string | null;
+  photo_url: string | null;
+  has_uploaded_photo: boolean;
   visibility: string;
   created_at: string;
 };
@@ -533,6 +537,7 @@ export type Candidate = {
   assignment_status: string | null;
   created_at: string;
   updated_at: string;
+  photo_thumb_url: string | null;
 };
 export type CandidateDetail = Candidate & {
   history: {

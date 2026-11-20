@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
+import { PlayerAvatar } from "@/components/players/player-avatar";
 import { StatusBadge } from "@/components/assignments/status-badge";
 import { RequirementForm } from "@/components/recruitment/requirement-form";
 import { Button, Card, Empty, ErrorText, Pagination } from "@/components/ui/ui";
@@ -326,6 +327,12 @@ function CandidateRow({
     <li className="rounded-[2px] border border-line p-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
+          <PlayerAvatar
+            name={c.player_name}
+            src={c.photo_thumb_url}
+            size="xs"
+            className="mr-2 align-middle"
+          />
           <Link
             href={`/players/${c.player_id}`}
             className="font-medium text-link hover:underline"
@@ -539,6 +546,12 @@ function Discovery({
                   />
                 )}
                 <div>
+                  <PlayerAvatar
+                    name={m.player.full_name}
+                    src={m.player.photo_thumb_url}
+                    size="xs"
+                    className="mr-2 align-middle"
+                  />
                   <Link
                     href={`/players/${m.player.id}`}
                     className="font-medium text-link hover:underline"
