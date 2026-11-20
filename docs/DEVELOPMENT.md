@@ -9,3 +9,21 @@
 - Backend: `ruff` (lint + format), `pytest`. Frontend: `eslint`, `tsc`, `vitest`, `prettier`.
 - Update `docs/` whenever architecture, APIs or the schema change.
 - Phase 0 pending docs: `DATABASE_SCHEMA.md` and `RBAC.md` (designed before Phase 1 begins).
+
+## Demo data
+
+`backend/scripts/seed_demo.py` fills an existing organization with realistic test data: demo staff
+(admin, recruitment manager, scouts, coach), clubs and squads with generated player portraits,
+career histories, a league season with results and match statistics, assignments and scouting
+reports in every workflow state, recruitment requirements with pipelines, and shortlists.
+
+```bash
+cd backend
+uv run python scripts/seed_demo.py "Your Organization Name" --size full   # or --size small
+```
+
+- Runs only in the `local`/`test` environment and refuses to seed the same organization twice.
+- Everything goes through the API (so rules, histories and notifications are real); only the demo
+  staff memberships are inserted directly, since joining normally needs the owner's invitation.
+- Demo logins share one password, listed in `demo-accounts.md` at the repository root (git-ignored).
+- Clubs it creates carry `[demo data]` in their description; that is how a second run is detected.
