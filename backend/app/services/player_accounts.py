@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import AppError
 from app.domain.football import age_on, is_minor
 from app.models.club import Club
+from app.models.notification import Notification
 from app.models.organization import Organization, OrganizationMember
 from app.models.player import Player, PlayerCareer, PlayerClaim, PlayerPosition
 from app.models.rbac import Role
@@ -311,6 +312,51 @@ async def decide_claim(
     return next(x for x in await list_org_claims(db, ctx, None) if x.id == claim_id)
 
 
+# ---- telling the club what the player changed --------------------------------------------
+_FIELD_LABELS = {
+    "nationality": "nationality", "height_cm": "height", "weight_kg": "weight",
+    "preferred_foot": "preferred foot", "primary_position": "main position",
+    "secondary_positions": "other positions", "biography": "biography", "photo": "photo",
+    "visibility": "visibility", "open_to_offers": "open to offers",
+    "contact_email": "contact email",
+}  # fmt: skip
+_PREFIX = "Changed: "
+
+
+async def _tell_owner(
+    db: AsyncSession, player: Player, user: User, fields: list[str], extra: str | None = None
+) -> None:
+    """Notifies the owning organization's staff that the player edited their own profile.
+    Quick successive edits fold into one unread notification instead of piling up."""
+    org_id = player.owner_organization_id
+    if org_id is None or not fields:
+        return
+    link = f"/players/{player.id}"
+    labels = [_FIELD_LABELS.get(x, x) for x in fields]
+    for uid in await _reviewers(db, org_id):
+        merged, note = labels, extra
+        previous = await db.scalar(
+            select(Notification).where(
+                Notification.user_id == uid,
+                Notification.type == "player_profile_updated",
+                Notification.link_path == link,
+                Notification.read_at.is_(None),
+            )
+        )
+        if previous is not None:
+            if previous.body and previous.body.startswith(_PREFIX):
+                head, _, tail = previous.body[len(_PREFIX) :].partition(" · ")
+                merged = list(dict.fromkeys(head.split(", ") + labels))
+                note = extra or tail or None
+            await db.delete(previous)
+        body = _PREFIX + ", ".join(merged) + (f" · {note}" if note else "")
+        await notify(
+            db, user_id=uid, type="player_profile_updated",
+            title=f"{player.full_name} updated their own profile", body=body,
+            link_path=link, organization_id=org_id,
+        )  # fmt: skip
+
+
 # ---- the player's own profile -----------------------------------------------------------
 async def _own_player(db: AsyncSession, user: User, *, lock: bool = False) -> Player:
     stmt = select(Player).where(Player.claimed_by_user_id == user.id, Player.archived_at.is_(None))
@@ -410,6 +456,15 @@ async def update_self(db: AsyncSession, user: User, data: SelfUpdate) -> SelfPro
             target_id=str(player.id),
             metadata={"from": old_visibility, "to": player.visibility, "by": "player"},
         )  # fmt: skip
+    touched = sorted(changes) + (["secondary_positions"] if secondaries is not None else [])
+    note = None
+    if player.visibility != old_visibility:
+        note = (
+            "now visible to every organization"
+            if player.visibility == "network"
+            else "now visible to the club only"
+        )
+    await _tell_owner(db, player, user, touched, note)
     await db.commit()
     return await _profile(db, player)
 
@@ -431,6 +486,7 @@ async def set_self_photo(
         organization_id=player.owner_organization_id, target_type="player",
         target_id=str(player.id), metadata={"bytes": len(data), "by": "player"},
     )  # fmt: skip
+    await _tell_owner(db, player, user, ["photo"])
     try:
         await db.commit()
     except Exception:
@@ -454,6 +510,7 @@ async def remove_self_photo(db: AsyncSession, user: User) -> SelfProfile:
             organization_id=player.owner_organization_id, target_type="player",
             target_id=str(player.id), metadata={"by": "player"},
         )  # fmt: skip
+        await _tell_owner(db, player, user, ["photo"], "removed")
         await db.commit()
         if old:
             store = media.storage()

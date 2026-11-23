@@ -46,4 +46,5 @@ NOTIFICATION_TYPES = [
     "report_submitted", "report_approved", "report_rejected", "report_revision_requested",
     "recruitment_status_updated", "player_shortlisted", "shortlist_shared",
     "player_claim_requested", "player_claim_approved", "player_claim_rejected",
+    "player_profile_updated",
 ]  # fmt: skip

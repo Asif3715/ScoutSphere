@@ -320,3 +320,83 @@ async def test_password_still_works_for_player_accounts(client):
     await make_user("p@x.com", account_type="player")
     r = await client.post(f"{API}/auth/login", json={"email": "p@x.com", "password": PASSWORD})
     assert r.status_code == 200 and r.json()["user"]["account_type"] == "player"
+
+
+# ---- the club is told when a player edits their profile ---------------------------------
+async def _updates(client, token):
+    items = (await client.get(f"{API}/notifications", headers=bearer(token))).json()["items"]
+    return [n for n in items if n["type"] == "player_profile_updated"]
+
+
+async def test_club_staff_are_notified_when_a_player_edits_their_profile(client):
+    org, player, owner_t, admin_h, scout_h, h = await world(client)
+    await approved(client, admin_h, h, player)
+    admin_t = admin_h["Authorization"].split()[1]
+    scout_t = scout_h["Authorization"].split()[1]
+    assert await _updates(client, owner_t) == []  # nothing before the player does anything
+
+    await client.patch(ME, json={"height_cm": 181, "biography": "Playmaker."}, headers=h)
+    for token in (owner_t, admin_t):
+        [n] = await _updates(client, token)
+        assert n["title"] == "Ana Costa updated their own profile"
+        assert n["body"] == "Changed: biography, height"
+        assert n["link_path"] == f"/players/{player['id']}"
+    assert await _updates(client, scout_t) == []  # scouts don't manage players
+
+    # more edits fold into the same unread notification instead of piling up
+    await client.patch(ME, json={"preferred_foot": "left", "height_cm": 182}, headers=h)
+    [n] = await _updates(client, owner_t)
+    assert n["body"] == "Changed: biography, height, preferred foot"
+
+    # a visibility change is called out in words
+    await client.patch(ME, json={"visibility": "network"}, headers=h)
+    [n] = await _updates(client, owner_t)
+    assert n["body"].endswith("visibility · now visible to every organization")
+    await client.patch(ME, json={"biography": "Updated."}, headers=h)
+    [n] = await _updates(client, owner_t)
+    assert "now visible to every organization" in n["body"]  # kept when merging
+
+
+async def test_a_read_notification_is_followed_by_a_new_one(client):
+    org, player, owner_t, admin_h, _, h = await world(client)
+    await approved(client, admin_h, h, player)
+    await client.patch(ME, json={"height_cm": 181}, headers=h)
+    [first] = await _updates(client, owner_t)
+    await client.post(f"{API}/notifications/{first['id']}/read", headers=bearer(owner_t))
+    await client.patch(ME, json={"weight_kg": 70}, headers=h)
+    assert [n["body"] for n in await _updates(client, owner_t)] == [
+        "Changed: weight",
+        "Changed: height",
+    ]
+
+
+async def test_photo_changes_and_rejected_edits_notify_correctly(client):
+    org, player, owner_t, admin_h, _, h = await world(client)
+    await approved(client, admin_h, h, player)
+    await client.put(
+        f"{ME}/photo", files={"file": ("p.jpg", image_bytes(), "image/jpeg")}, headers=h
+    )
+    [n] = await _updates(client, owner_t)
+    assert n["body"] == "Changed: photo"
+    await client.delete(f"{ME}/photo", headers=h)
+    [n] = await _updates(client, owner_t)
+    assert n["body"] == "Changed: photo · removed"
+    # an edit that fails validation, or an empty one, tells nobody anything
+    before = await _updates(client, owner_t)
+    assert (await client.patch(ME, json={"height_cm": 20}, headers=h)).status_code == 422
+    await client.patch(ME, json={}, headers=h)
+    assert await _updates(client, owner_t) == before
+
+
+async def test_staff_can_switch_these_notifications_off(client):
+    org, player, owner_t, admin_h, _, h = await world(client)
+    await approved(client, admin_h, h, player)
+    off = await client.put(
+        f"{API}/notifications/preferences",
+        json={"preferences": {"player_profile_updated": False}},
+        headers=bearer(owner_t),
+    )
+    assert off.status_code == 200
+    await client.patch(ME, json={"height_cm": 181}, headers=h)
+    assert await _updates(client, owner_t) == []
+    assert len(await _updates(client, admin_h["Authorization"].split()[1])) == 1

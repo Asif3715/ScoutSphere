@@ -143,6 +143,13 @@ NOTIFICATION_META.player_claim_rejected = {
   when: "My request to link my profile is declined",
 };
 
+NOTIFICATION_META.player_profile_updated = {
+  category: "Players",
+  tone: INFO,
+  Icon: StarIcon,
+  when: "A linked player edits their own profile",
+};
+
 const FALLBACK: Meta = {
   category: "Assignments",
   tone: "bg-surface-2 text-ink",
