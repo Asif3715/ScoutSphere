@@ -150,6 +150,25 @@ NOTIFICATION_META.player_profile_updated = {
   when: "A linked player edits their own profile",
 };
 
+NOTIFICATION_META.candidate_signed = {
+  category: "Recruitment",
+  tone: VOLT,
+  Icon: TargetIcon,
+  when: "A candidate signs and needs adding to a team",
+};
+NOTIFICATION_META.squad_joined = {
+  category: "Players",
+  tone: GOOD,
+  Icon: TargetIcon,
+  when: "I'm added to or moved between a club's teams",
+};
+NOTIFICATION_META.squad_left = {
+  category: "Players",
+  tone: WARN,
+  Icon: TargetIcon,
+  when: "I'm released from a team",
+};
+
 const FALLBACK: Meta = {
   category: "Assignments",
   tone: "bg-surface-2 text-ink",

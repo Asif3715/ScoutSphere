@@ -186,3 +186,9 @@ The organization's side uses the normal header: `GET /player-claims?status=` and
 Rules once a profile is claimed: only the player changes `visibility` (the organization gets 409 `controlled_by_player`; it can still edit everything else). Other organizations see `contact_email` only while `open_to_offers` is on, never for a minor; the owning organization always does. Players under 18 cannot change `visibility`, `open_to_offers` or `contact_email` (403 `guardian_required`) until a guardian-consent flow exists. `PlayerOut` gains `claimed`, `open_to_offers`, `contact_email`.
 
 New error codes: `no_profile`, `claim_pending`, `already_claimed`, `not_pending`, `controlled_by_player`, `guardian_required`, `contact_required`, `account_type_not_allowed`.
+
+## Signing and squads
+
+- Moving a candidate to `signed` notifies the organization's club managers (`candidate_signed`, link to the requirement) unless the player is already in one of its teams, and never the person who did it. It does not add the player to a team: that is `POST /teams/{id}/players`, which needs `clubs:manage`. The pipeline page offers it inline for people with that permission.
+- Candidates carry `squad_team_id` and `squad_team_name` ("Team · Club"): the caller's own organization's active team for that player, or null.
+- A player with a linked account is notified (`squad_joined`, `squad_left`, link `/player`) when added to a team, transferred between teams, or released. Players without an account are skipped.

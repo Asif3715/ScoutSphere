@@ -616,6 +616,9 @@ export type Candidate = {
   created_at: string;
   updated_at: string;
   photo_thumb_url: string | null;
+  /** The team of this organization the player is registered with, if any. */
+  squad_team_id?: string | null;
+  squad_team_name?: string | null;
 };
 export type CandidateDetail = Candidate & {
   history: {
