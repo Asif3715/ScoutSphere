@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { LogoMark, Wordmark } from "@/components/brand/brand";
+import { NavProgress } from "@/components/layout/nav-progress";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { FlashBanner } from "@/components/ui/flash-banner";
 import { PersonAvatar, RoleBadge, roleName } from "@/components/ui/person";
@@ -67,6 +68,18 @@ const NAV = [
   },
 ] as const;
 
+/** Spinner at the end of a nav item while its page loads. Must render inside the <Link>. */
+function PendingSpinner() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden="true"
+      data-pending={pending}
+      className="link-spinner ml-auto"
+    />
+  );
+}
+
 function today() {
   return new Date()
     .toLocaleDateString("en-GB", {
@@ -95,6 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
+      <NavProgress />
       {menuOpen && (
         <div
           aria-hidden="true"
@@ -161,6 +175,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           {String(item.n).padStart(2, "0")}
                         </span>
                         {item.label}
+                        <PendingSpinner />
                       </Link>
                     </li>
                   );
