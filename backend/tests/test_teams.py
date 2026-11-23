@@ -337,3 +337,87 @@ async def test_squad_permissions_and_isolation(client):
     assert (await client.get(f"{API}/teams/{team['id']}/squad", headers=ho)).status_code == 404
     assert (await client.get(f"{API}/teams", headers=ho)).json() == []
     assert (await client.delete(f"{API}/teams/{team['id']}", headers=ho)).status_code == 404
+
+
+# ---- adding another club's player needs a signed candidate --------------------------------
+async def _outside_setup(client):
+    from tests.helpers import make_club, make_player, make_team, setup_org
+
+    ta, oa = await setup_org(client, "a@x.com", "Org A")
+    tb, ob = await setup_org(client, "b@x.com", "Org B")
+    mine = await make_player(client, tb, ob["id"], "Own Player", 20)
+    theirs = await make_player(client, ta, oa["id"], "Their Player", 22, visibility="network")
+    club = await make_club(client, tb, ob["id"])
+    team = await make_team(client, tb, ob["id"], club)
+    return tb, ob, mine, theirs, team
+
+
+async def test_own_players_join_a_team_directly(client):
+    tb, ob, mine, theirs, team = await _outside_setup(client)
+    r = await client.post(
+        f"{API}/teams/{team['id']}/players",
+        json={"player_id": mine["id"]},
+        headers=hdr(tb, ob["id"]),
+    )
+    assert r.status_code == 201, r.text
+
+
+async def test_another_clubs_player_needs_to_be_signed_first(client):
+    tb, ob, mine, theirs, team = await _outside_setup(client)
+    h = hdr(tb, ob["id"])
+    url = f"{API}/teams/{team['id']}/players"
+    no = await client.post(url, json={"player_id": theirs["id"]}, headers=h)
+    assert no.status_code == 409 and no.json()["error"]["code"] == "signing_required"
+    assert "Sign them through Recruitment" in no.json()["error"]["message"]
+
+    req = (
+        await client.post(
+            f"{API}/recruitment/requirements",
+            json={"title": "A midfielder", "position": "CM"},
+            headers=h,
+        )
+    ).json()
+    cand = (
+        await client.post(
+            f"{API}/recruitment/requirements/{req['id']}/candidates",
+            json={"player_id": theirs["id"]},
+            headers=h,
+        )
+    ).json()
+    stage = f"{API}/recruitment/candidates/{cand['id']}/stage"
+    await client.post(stage, json={"to": "negotiation"}, headers=h)
+    # being in the pipeline, even in negotiation, is not enough
+    assert (await client.post(url, json={"player_id": theirs["id"]}, headers=h)).status_code == 409
+    await client.post(stage, json={"to": "signed"}, headers=h)
+    assert (await client.post(url, json={"player_id": theirs["id"]}, headers=h)).status_code == 201
+
+
+async def test_signed_with_another_organization_does_not_count(client):
+    from tests.helpers import setup_org
+
+    tb, ob, mine, theirs, team = await _outside_setup(client)
+    tc, oc = await setup_org(client, "c@x.com", "Org C")
+    hc = hdr(tc, oc["id"])
+    req = (
+        await client.post(
+            f"{API}/recruitment/requirements", json={"title": "Any", "position": "CM"}, headers=hc
+        )
+    ).json()
+    cand = (
+        await client.post(
+            f"{API}/recruitment/requirements/{req['id']}/candidates",
+            json={"player_id": theirs["id"]},
+            headers=hc,
+        )
+    ).json()
+    for st in ("negotiation", "signed"):
+        await client.post(
+            f"{API}/recruitment/candidates/{cand['id']}/stage", json={"to": st}, headers=hc
+        )
+    # Org C signed them, but Org B still cannot register them
+    r = await client.post(
+        f"{API}/teams/{team['id']}/players",
+        json={"player_id": theirs["id"]},
+        headers=hdr(tb, ob["id"]),
+    )
+    assert r.status_code == 409
