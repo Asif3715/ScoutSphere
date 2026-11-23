@@ -604,10 +604,113 @@ main details[open] > summary::before {
   animation-delay: 450ms;
 }
 
-.pitch-line {
-  stroke-dasharray: 1400;
-  stroke-dashoffset: 1400;
-  animation: draw 2.2s cubic-bezier(0.6, 0.1, 0.2, 1) forwards;
+/* ---------- scouting map (see components/brand/pitch-art.tsx) ---------- */
+.pitch-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.6s cubic-bezier(0.6, 0.1, 0.2, 1) forwards;
+}
+.pitch-fade {
+  animation: fade-in 1.2s ease 0.4s both;
+}
+.pitch-appear {
+  animation: fade-in 0.6s ease both;
+}
+.pitch-trail {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: trail-run 9s linear infinite;
+}
+.pitch-ball {
+  opacity: 0;
+  offset-rotate: 0deg;
+  animation: ball-run 9s linear infinite;
+}
+.pitch-ring,
+.pitch-tag {
+  opacity: 0;
+}
+.pitch-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ring-ping 9s ease-out infinite;
+}
+.pitch-tag {
+  /* keyframes are generated per tag in pitch-art.tsx (animation-name is set inline) */
+  animation-duration: 9s;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+.pitch-scan {
+  transform: translateX(-150px);
+  animation: scan-sweep 9s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes trail-run {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  72% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  92% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes ball-run {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  72% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  88% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+@keyframes ring-ping {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.5);
+  }
+  14% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+@keyframes scan-sweep {
+  from {
+    transform: translateX(-150px);
+  }
+  to {
+    transform: translateX(690px);
+  }
 }
 
 .radar-sweep {
@@ -628,8 +731,21 @@ main details[open] > summary::before {
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
   }
-  .pitch-line {
+  /* a still frame of the scouting map: full pitch, route drawn, tags shown, no ball */
+  .pitch-draw,
+  .pitch-trail {
+    animation: none !important;
     stroke-dashoffset: 0;
+  }
+  .pitch-ball,
+  .pitch-ring,
+  .pitch-scan {
+    animation: none !important;
+    opacity: 0;
+  }
+  .pitch-tag {
+    animation: none !important;
+    opacity: 1;
   }
 }
 
