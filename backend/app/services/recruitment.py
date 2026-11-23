@@ -3,7 +3,7 @@
 import uuid
 from dataclasses import dataclass, field
 
-from sqlalchemy import exists, func, select
+from sqlalchemy import exists, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +12,7 @@ from app.domain.football import age_on
 from app.domain.recruitment import (
     DEFAULT_STAGE,
     REQUIREMENT_TRANSITIONS,
+    STAGE_ORDER,
     STAGES,
     can_move,
 )
@@ -789,3 +790,60 @@ async def assign_scout(
         await _apply_stage(db, ctx, c, "scout_assigned", f"Scout assigned: {created.scout_name}")
     await db.commit()
     return await get_candidate(db, ctx, candidate_id)
+
+
+# What a report event does to a candidate's stage. Forward moves never pull a candidate back
+# (someone further along, say in negotiation, is left alone); the one step back is a report
+# sent for revision, because the scout is working on it again.
+_REPORT_EVENT_TARGET = {"submitted": "report_submitted", "approved": "under_review"}
+_REPORT_EVENT_NOTE = {
+    "submitted": "Automatic: a scouting report was submitted",
+    "approved": "Automatic: the scouting report was approved",
+    "revision_requested": "Automatic: the report was sent back to the scout for changes",
+}
+
+
+async def sync_with_report(
+    db: AsyncSession, ctx: AuthContext, report: ScoutingReport, event: str
+) -> int:
+    """Moves this organization's open candidates for the report's player along the pipeline
+    when the report is submitted, approved or sent back. The caller commits. Returns how many
+    candidates moved. A rejected report changes nothing: the manager decides what is next."""
+    if event not in _REPORT_EVENT_NOTE:
+        return 0
+    query = (
+        select(RecruitmentCandidate)
+        .join(
+            RecruitmentRequirement,
+            RecruitmentRequirement.id == RecruitmentCandidate.requirement_id,
+        )
+        .where(
+            RecruitmentCandidate.organization_id == report.organization_id,
+            RecruitmentCandidate.player_id == report.player_id,
+            RecruitmentCandidate.stage.in_(STAGE_ORDER[:-1]),  # active: not signed/out
+            RecruitmentRequirement.status.in_(("draft", "open", "on_hold")),
+        )
+    )
+    # A candidate already tied to a different assignment is waiting on that scout's work.
+    if report.assignment_id is not None:
+        query = query.where(
+            or_(
+                RecruitmentCandidate.assignment_id.is_(None),
+                RecruitmentCandidate.assignment_id == report.assignment_id,
+            )
+        )
+    else:
+        query = query.where(RecruitmentCandidate.assignment_id.is_(None))
+
+    moved = 0
+    for c in (await db.scalars(query.with_for_update(of=RecruitmentCandidate))).all():
+        target = _REPORT_EVENT_TARGET.get(event)
+        if target is None:  # revision requested: step back only from the report stages
+            if c.stage not in ("report_submitted", "under_review"):
+                continue
+            target = "scout_assigned"
+        elif STAGE_ORDER.index(c.stage) >= STAGE_ORDER.index(target):
+            continue
+        await _apply_stage(db, ctx, c, target, _REPORT_EVENT_NOTE[event])
+        moved += 1
+    return moved

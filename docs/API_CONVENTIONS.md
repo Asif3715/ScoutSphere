@@ -146,7 +146,9 @@ New error codes: `invalid_scout`, `invalid_target`, `deadline_in_past`, `not_edi
 | `GET/POST /shortlists`, `GET/PATCH/DELETE /shortlists/{id}` | Shortlists (`scope=all|mine|shared`) |
 | `POST/PATCH/DELETE /shortlists/{id}/players[/{player_id}]`, `PUT /shortlists/{id}/shares`, `GET /shortlists/{id}/compare` | Shortlist players, sharing, comparison |
 
-Pipeline stages: discovered, shortlisted, scout_assigned, under_evaluation, trial_invited, negotiation, final_decision, signed, rejected, archived. `signed` is reachable only from negotiation or final_decision; `rejected` and `archived` reopen only to `discovered`. Closed (fulfilled or cancelled) requirements freeze their pipeline except for archive/reject.
+Pipeline stages: discovered, under_evaluation, shortlisted, scout_assigned, report_submitted, under_review, trial_proposed, negotiation, signed, rejected, archived. `signed` is reachable only from negotiation; `rejected` and `archived` reopen only to `discovered`. Closed (fulfilled or cancelled) requirements freeze their pipeline except for archive/reject.
+
+Scouting reports move candidates automatically (`services/recruitment.sync_with_report`), for the organization's open candidates of the report's player. If the report belongs to an assignment, only candidates tied to that assignment (or to none) are affected; a report with no assignment affects candidates tied to none. Submitting moves a candidate to `report_submitted`; approving moves it to `under_review`; requesting changes sends it back to `scout_assigned` (only from those two stages). A candidate already further along is never pulled back, and a rejected report changes nothing. Each move is written to the stage history with an "Automatic: ..." note and notifies the requirement's creator, like a manual move.
 
 New error codes: `invalid_transition`, `same_stage`, `requirement_closed`, `already_candidate`, `already_shortlisted`, `invalid_player`, `invalid_requirement`, `invalid_selection`, `invalid_user`, `not_editable`.
 

@@ -38,6 +38,7 @@ from app.schemas.reports import (
 from app.services.assignments import _apply, my_scout_profile, return_to_scout_for_revision
 from app.services.audit import record_audit
 from app.services.notifications import notify
+from app.services.recruitment import sync_with_report
 
 NOT_FOUND = AppError(404, "not_found", "Report not found")
 TEXT_FIELDS = ["strengths", "weaknesses", "development_areas", "general_observations"]
@@ -439,6 +440,7 @@ async def submit_report(db: AsyncSession, ctx: AuthContext, report_id: uuid.UUID
             body=f"Version {r.current_version} is ready for review.",
             link_path=f"/reports/{r.id}", organization_id=r.organization_id,
         )  # fmt: skip
+    await sync_with_report(db, ctx, r, "submitted")
     await record_audit(
         db, action="report.submit", outcome="success", actor_user_id=ctx.user_id,
         organization_id=ctx.organization_id, target_type="report", target_id=str(r.id),
@@ -491,6 +493,7 @@ async def review_report(
         await return_to_scout_for_revision(
             db, ctx, r.assignment_id, f"Revision requested on a report: {comment}"
         )
+    await sync_with_report(db, ctx, r, data.decision)
     await record_audit(
         db, action="report.review", outcome="success", actor_user_id=ctx.user_id,
         organization_id=ctx.organization_id, target_type="report", target_id=str(r.id),
