@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, type ComponentProps } from "react";
 
-import { LogoMark, PitchArt, Wordmark } from "@/components/brand/brand";
+import { LogoMark, Wordmark } from "@/components/brand/brand";
+import { PitchArt } from "@/components/brand/pitch-art";
 import { FlashBanner } from "@/components/ui/flash-banner";
 
 type Props = ComponentProps<"input"> & {

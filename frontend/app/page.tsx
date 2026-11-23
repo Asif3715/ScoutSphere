@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { LogoMark, PitchArt, Wordmark } from "@/components/brand/brand";
+import { LogoMark, Wordmark } from "@/components/brand/brand";
+import { PitchArt } from "@/components/brand/pitch-art";
 import { fetchReadiness, type ReadinessResponse } from "@/lib/api";
 
 async function BackendStatus() {
