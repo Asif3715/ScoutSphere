@@ -19,3 +19,8 @@ Found during the manual QA round (adversarial API probing, concurrency races, a 
 ## Player photos
 - Photos are stored on the backend's local disk (Docker volume `media`). Before running more than one backend instance, or for backups, move them to object storage (S3 / MinIO) behind the existing storage interface.
 - Signed photo URLs are bearer-like: anyone holding one can view that photo until it expires (24 to 48 hours). They are only ever given to users allowed to see the player.
+
+## Player accounts
+- Claims are verified by name plus exact date of birth, then approved by the owning organization. There is no email or document check, and no way yet for a club to invite a player to claim a specific record.
+- Minors cannot change their visibility or contact settings until a parent/guardian consent flow exists; the club has to act on their behalf.
+- A player account sees only its own profile and career. Viewing who has looked at or shortlisted them, trial invitations and messaging are not built.

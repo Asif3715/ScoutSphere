@@ -56,6 +56,11 @@ export default function PlayersPage() {
     ([k, v]) => v !== EMPTY[k as keyof Filters],
   );
 
+  const claimCount = useQuery({
+    queryKey: ["claims", activeOrgId, "pending"],
+    queryFn: () => apiFetch<{ id: string }[]>("/player-claims?status=pending"),
+    enabled: !!activeOrgId && can("players:write"),
+  });
   const { data, error, isLoading } = useQuery({
     queryKey: ["players", activeOrgId, filters, page],
     queryFn: () => {
@@ -82,9 +87,19 @@ export default function PlayersPage() {
         }
         actions={
           can("players:write") && (
-            <Link href="/players/new" className="btn btn-primary">
-              + Add player
-            </Link>
+            <>
+              <Link href="/players/claims" className="btn btn-secondary">
+                Account requests
+                {!!claimCount.data?.length && (
+                  <span className="rounded-[2px] bg-volt px-1.5 text-volt-ink">
+                    {claimCount.data.length}
+                  </span>
+                )}
+              </Link>
+              <Link href="/players/new" className="btn btn-primary">
+                + Add player
+              </Link>
+            </>
           )
         }
       />

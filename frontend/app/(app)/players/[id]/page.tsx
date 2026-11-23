@@ -113,6 +113,19 @@ export default function PlayerPage() {
                   Under 18
                 </span>
               )}
+              {p.claimed && (
+                <span
+                  className="chip ml-2 bg-ok-soft align-middle text-ok"
+                  title="This player has their own account"
+                >
+                  Has account
+                </span>
+              )}
+              {p.open_to_offers && (
+                <span className="chip ml-2 bg-volt/40 align-middle text-ink">
+                  Open to offers
+                </span>
+              )}
             </h1>
             <p className="text-sm opacity-70">
               {[
@@ -124,9 +137,22 @@ export default function PlayerPage() {
                 .filter(Boolean)
                 .join(" · ")}
             </p>
+            {p.contact_email && (
+              <p className="text-sm">
+                Contact:{" "}
+                <a
+                  href={`mailto:${p.contact_email}`}
+                  className="text-link underline"
+                >
+                  {p.contact_email}
+                </a>
+              </p>
+            )}
             <p className="text-xs opacity-60">
               {p.is_owner
-                ? VISIBILITY_LABELS[p.visibility]
+                ? p.claimed
+                  ? "Visibility is set by the player"
+                  : VISIBILITY_LABELS[p.visibility]
                 : "Shared with your organization by another club (read-only)"}
             </p>
             {p.is_minor && !p.is_owner && (

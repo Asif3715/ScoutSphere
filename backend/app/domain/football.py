@@ -17,6 +17,7 @@ POSITION_TO_GROUP = {p: g for g, ps in POSITION_GROUPS.items() for p in ps}
 
 FEET = ["left", "right", "both"]
 VISIBILITIES = ["private", "network", "public"]
+CLAIM_STATUSES = ["pending", "approved", "rejected", "cancelled"]
 SPELL_TYPES = ["permanent", "loan", "youth", "trial"]
 MEDIA_KINDS = ["video", "image", "document"]
 TEAM_TYPES = [

@@ -124,6 +124,13 @@ class PlayerOut(BaseModel):
     is_owner: bool  # created by the caller's organization
     current_club: CurrentClub | None
     created_at: datetime
+    # The player has their own verified account. Once true, they (not the organization)
+    # decide the profile's visibility.
+    claimed: bool = False
+    open_to_offers: bool = False
+    # Shown to the owning organization always, and to others only while the player is open
+    # to offers (never for a minor).
+    contact_email: str | None = None
 
 
 class PlayerSummary(BaseModel):

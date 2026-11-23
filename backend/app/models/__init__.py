@@ -14,7 +14,13 @@ from app.models.competition import (
 from app.models.invitation import Invitation
 from app.models.notification import Notification, NotificationPreference
 from app.models.organization import Organization, OrganizationMember
-from app.models.player import Player, PlayerCareer, PlayerMedia, PlayerPosition
+from app.models.player import (  # noqa: F401
+    Player,
+    PlayerCareer,
+    PlayerClaim,
+    PlayerMedia,
+    PlayerPosition,
+)
 from app.models.rbac import Permission, Role, RolePermission
 from app.models.recruitment import (
     RecruitmentCandidate,

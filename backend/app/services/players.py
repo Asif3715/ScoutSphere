@@ -64,6 +64,8 @@ def build_out(p: Player, ctx: AuthContext, clubs: dict, secondaries: dict) -> Pl
         has_uploaded_photo=p.photo_key is not None and not hide,
         visibility=p.visibility,
         is_owner=owner, current_club=_club(clubs, p.id), created_at=p.created_at,
+        claimed=p.claimed_by_user_id is not None, open_to_offers=p.open_to_offers,
+        contact_email=p.contact_email if owner or (p.open_to_offers and not minor) else None,
     )  # fmt: skip
 
 
@@ -165,6 +167,11 @@ async def update_player(
         if required in changes and changes[required] is None:
             raise AppError(422, "validation_error", f"{required} cannot be empty")
 
+    if player.claimed_by_user_id and "visibility" in changes:
+        raise AppError(
+            409, "controlled_by_player",
+            "This player has their own account and controls who can see their profile",
+        )  # fmt: skip
     secondaries = changes.pop("secondary_positions", None)
     old_visibility = player.visibility
     for field, value in changes.items():

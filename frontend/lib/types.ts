@@ -131,6 +131,84 @@ export type Player = PlayerSummary & {
   has_uploaded_photo: boolean;
   visibility: string;
   created_at: string;
+  /** The player has their own account, which now controls the profile's visibility. */
+  claimed?: boolean;
+  open_to_offers?: boolean;
+  contact_email?: string | null;
+};
+
+// ---- player accounts ------------------------------------------------------------------
+export type CareerSpell = {
+  club_name: string;
+  team_label: string | null;
+  spell_type: string;
+  start_date: string;
+  end_date: string | null;
+  appearances: number | null;
+  goals: number | null;
+  assists: number | null;
+};
+
+export type SelfProfile = {
+  player_id: string;
+  full_name: string;
+  date_of_birth: string;
+  age: number;
+  is_minor: boolean;
+  nationality: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  preferred_foot: string | null;
+  primary_position: string | null;
+  secondary_positions: string[];
+  biography: string | null;
+  photo_url: string | null;
+  photo_thumb_url: string | null;
+  has_uploaded_photo: boolean;
+  visibility: string;
+  open_to_offers: boolean;
+  contact_email: string | null;
+  current_club: { club_id: string; club_name: string } | null;
+  managed_by: string | null;
+  career: CareerSpell[];
+};
+
+export type Claimable = {
+  player_id: string;
+  full_name: string;
+  age: number;
+  nationality: string | null;
+  primary_position: string | null;
+  current_club: { club_id: string; club_name: string } | null;
+  reviewed_by: string;
+};
+
+export type MyClaim = {
+  id: string;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  player_id: string;
+  player_name: string;
+  reviewed_by: string;
+  message: string | null;
+  decision_note: string | null;
+  created_at: string;
+  decided_at: string | null;
+};
+
+export type OrgClaim = {
+  id: string;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  created_at: string;
+  message: string | null;
+  requester_name: string;
+  requester_email: string;
+  player_id: string;
+  player_name: string;
+  player_age: number;
+  player_position: string | null;
+  decision_note: string | null;
+  decided_at: string | null;
+  decided_by_name: string | null;
 };
 
 export type DuplicateCandidate = {

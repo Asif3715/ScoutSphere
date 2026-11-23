@@ -11,6 +11,7 @@ from app.api.v1 import (
     notifications,
     organizations,
     platform,
+    player_accounts,
     players,
     recruitment,
     reports,
@@ -25,6 +26,8 @@ api_router.include_router(auth.router)
 api_router.include_router(organizations.router)
 api_router.include_router(clubs.router)
 api_router.include_router(platform.router)
+api_router.include_router(player_accounts.me)
+api_router.include_router(player_accounts.claims)
 api_router.include_router(players.router)
 api_router.include_router(teams.router)
 api_router.include_router(scouts.router)

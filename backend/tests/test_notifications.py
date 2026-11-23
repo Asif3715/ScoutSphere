@@ -71,7 +71,7 @@ async def test_pagination(client):
 async def test_preferences_default_on_and_can_opt_out(client):
     s = await scouting_setup(client)
     prefs = (await client.get(f"{API}/notifications/preferences", headers=auth(s.scout_t))).json()
-    assert len(prefs) == 15 and all(p["enabled"] for p in prefs)
+    assert len(prefs) == 18 and all(p["enabled"] for p in prefs)
     types = {p["type"] for p in prefs}
     assert {"assignment_assigned", "report_submitted", "assignment_deadline"} <= types
 

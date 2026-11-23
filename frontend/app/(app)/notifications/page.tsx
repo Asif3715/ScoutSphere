@@ -16,7 +16,12 @@ import { apiFetch } from "@/lib/http";
 import type { AppNotification, Page } from "@/lib/types";
 
 type Pref = { type: string; enabled: boolean };
-const CATEGORIES = ["Assignments", "Reports", "Recruitment"] as const;
+const CATEGORIES = [
+  "Assignments",
+  "Reports",
+  "Recruitment",
+  "Players",
+] as const;
 
 function groupByDay(items: AppNotification[]) {
   const groups: { day: string; items: AppNotification[] }[] = [];
