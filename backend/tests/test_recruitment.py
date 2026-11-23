@@ -8,7 +8,9 @@ from tests.helpers import (
     add_role_member,
     add_spell,
     approved_report,
+    full_ratings,
     in_days,
+    make_assignment,
     make_club,
     make_player,
     make_requirement,
@@ -16,6 +18,9 @@ from tests.helpers import (
     scouting_setup,
     setup_org,
     unread,
+)
+from tests.helpers import (
+    move as move_assignment,
 )
 
 
@@ -652,3 +657,117 @@ async def test_assign_scout_rules(client):
         await client.post(url, json={"scout_id": s.scout_id}, headers=s.rm_h)
     ).status_code == 409
     assert add_role_member and add_spell  # (shared imports)
+
+
+# ---- reports move candidates along the pipeline ---------------------------------------------
+async def _stage(client, s, cand_id) -> dict:
+    return (await client.get(f"{REC}/candidates/{cand_id}", headers=s.rm_h)).json()
+
+
+async def _assigned_candidate(client, s):
+    req, p, cand = await pipeline(client, s)
+    d = (
+        await client.post(
+            f"{REC}/candidates/{cand['id']}/assign-scout",
+            json={"scout_id": s.scout_id, "deadline": in_days(5)},
+            headers=s.rm_h,
+        )
+    ).json()
+    return req, p, cand, d["assignment_id"]
+
+
+async def _submitted_report(client, s, player_id, assignment_id=None):
+    if assignment_id:  # the scout must accept an assignment before reporting on it
+        acc = await move_assignment(client, s.scout_h, {"id": assignment_id}, "accepted")
+        assert acc.status_code == 200, acc.text
+    body = {
+        "player_id": player_id, "observed_on": "2026-01-10", "recommendation": "recommend",
+        "general_observations": "Calm on the ball.", "ratings": full_ratings(),
+        **({"assignment_id": assignment_id} if assignment_id else {}),
+    }  # fmt: skip
+    r = await client.post(f"{API}/scouting-reports", json=body, headers=s.scout_h)
+    assert r.status_code == 201, r.text
+    sub = await client.post(f"{API}/scouting-reports/{r.json()['id']}/submit", headers=s.scout_h)
+    assert sub.status_code == 200, sub.text
+    return r.json()["id"]
+
+
+async def test_submitting_and_approving_a_report_moves_the_candidate(client):
+    s = await scouting_setup(client)
+    req, p, cand, asg = await _assigned_candidate(client, s)
+    assert (await _stage(client, s, cand["id"]))["stage"] == "scout_assigned"
+
+    rid = await _submitted_report(client, s, p["id"], asg)
+    d = await _stage(client, s, cand["id"])
+    assert d["stage"] == "report_submitted"
+    assert "report was submitted" in d["history"][-1]["note"]
+
+    ok = await client.post(
+        f"{API}/scouting-reports/{rid}/review", json={"decision": "approved"}, headers=s.rm_h
+    )
+    assert ok.status_code == 200, ok.text
+    d = await _stage(client, s, cand["id"])
+    assert d["stage"] == "under_review" and "approved" in d["history"][-1]["note"]
+    assert [h["to_stage"] for h in d["history"]][-3:] == [
+        "scout_assigned", "report_submitted", "under_review",
+    ]  # fmt: skip
+
+
+async def test_revision_request_sends_the_candidate_back_to_the_scout(client):
+    s = await scouting_setup(client)
+    req, p, cand, asg = await _assigned_candidate(client, s)
+    rid = await _submitted_report(client, s, p["id"], asg)
+    bad = await client.post(
+        f"{API}/scouting-reports/{rid}/review",
+        json={"decision": "revision_requested", "comment": "Add more on defending"},
+        headers=s.rm_h,
+    )
+    assert bad.status_code == 200, bad.text
+    assert (await _stage(client, s, cand["id"]))["stage"] == "scout_assigned"
+
+
+async def test_rejected_report_leaves_the_candidate_where_it_is(client):
+    s = await scouting_setup(client)
+    req, p, cand, asg = await _assigned_candidate(client, s)
+    rid = await _submitted_report(client, s, p["id"], asg)
+    await client.post(
+        f"{API}/scouting-reports/{rid}/review",
+        json={"decision": "rejected", "comment": "Not enough evidence"},
+        headers=s.rm_h,
+    )
+    assert (await _stage(client, s, cand["id"]))["stage"] == "report_submitted"
+
+
+async def test_reports_never_pull_a_further_along_candidate_back(client):
+    s = await scouting_setup(client)
+    req, p, cand, asg = await _assigned_candidate(client, s)
+    moved = await client.post(
+        f"{REC}/candidates/{cand['id']}/stage", json={"to": "negotiation"}, headers=s.rm_h
+    )
+    assert moved.status_code == 200, moved.text
+    rid = await _submitted_report(client, s, p["id"], asg)
+    await client.post(
+        f"{API}/scouting-reports/{rid}/review", json={"decision": "approved"}, headers=s.rm_h
+    )
+    assert (await _stage(client, s, cand["id"]))["stage"] == "negotiation"
+
+
+async def test_report_for_another_assignment_does_not_move_the_candidate(client):
+    s = await scouting_setup(client)
+    req, p, cand, asg = await _assigned_candidate(client, s)
+    s.player = p  # make_assignment targets s.player
+    other = await make_assignment(client, s, "player")  # a different job about the same player
+    await _submitted_report(client, s, p["id"], other["id"])
+    assert (await _stage(client, s, cand["id"]))["stage"] == "scout_assigned"
+
+
+async def test_closed_requirement_candidates_are_left_alone(client):
+    s = await scouting_setup(client)
+    req, p, cand = await pipeline(client, s)
+    assert (
+        await client.post(
+            f"{REC}/candidates/{cand['id']}/stage", json={"to": "rejected"}, headers=s.rm_h
+        )
+    ).status_code == 200
+    await _submitted_report(client, s, p["id"])
+    assert (await _stage(client, s, cand["id"]))["stage"] == "rejected"
