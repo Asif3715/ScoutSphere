@@ -228,6 +228,16 @@ export default function TeamPage() {
       {manage && (
         <Card className="max-w-xl space-y-3">
           <h2 className="font-semibold">Add a player</h2>
+          <p className="text-xs opacity-70">
+            Your own players can be added straight away. A player who belongs to
+            another club must be <strong>signed</strong> first: add them to a
+            pipeline in{" "}
+            <Link href="/recruitment" className="text-link underline">
+              Recruitment
+            </Link>{" "}
+            and move them to Signed, then add them here (or use the &ldquo;Add
+            to a team&rdquo; panel on the pipeline).
+          </p>
           <div className="flex gap-2">
             <input
               type="search"
@@ -254,6 +264,14 @@ export default function TeamPage() {
                   <span className="opacity-60">
                     · {c.age} · {c.primary_position ?? "—"}
                   </span>
+                  {!c.is_owner && (
+                    <span
+                      className="chip chip-outline ml-2"
+                      title="Belongs to another club: they must be signed through Recruitment first"
+                    >
+                      Other club
+                    </span>
+                  )}
                 </span>
                 <Button
                   variant="secondary"

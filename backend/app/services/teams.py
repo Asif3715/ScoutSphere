@@ -9,6 +9,7 @@ from app.core.errors import AppError
 from app.domain.football import POSITION_GROUPS, POSITION_TO_GROUP, age_on, is_minor
 from app.models.club import Club
 from app.models.player import Player, PlayerCareer
+from app.models.recruitment import RecruitmentCandidate
 from app.models.team import Team, TeamPlayer
 from app.permissions import catalog
 from app.permissions.context import AuthContext
@@ -253,6 +254,29 @@ async def _register(
     return tp
 
 
+async def _require_signed_if_outside(db: AsyncSession, ctx: AuthContext, player: Player) -> None:
+    """Your own players can join a team directly. A player whose record belongs to another
+    organization has to be signed first: that means a candidate of yours at the `signed`
+    stage in the recruitment pipeline. Otherwise anyone could register another club's player."""
+    if player.owner_organization_id == ctx.organization_id:
+        return
+    signed = await db.scalar(
+        select(RecruitmentCandidate.id)
+        .where(
+            RecruitmentCandidate.organization_id == ctx.organization_id,
+            RecruitmentCandidate.player_id == player.id,
+            RecruitmentCandidate.stage == "signed",
+        )
+        .limit(1)
+    )
+    if signed is None:
+        raise AppError(
+            409, "signing_required",
+            f"{player.full_name} belongs to another club. Sign them through Recruitment first "
+            "(add them to a pipeline and move them to Signed), then add them to a team.",
+        )  # fmt: skip
+
+
 async def add_to_squad(
     db: AsyncSession, ctx: AuthContext, team_id: uuid.UUID, data: SquadAdd
 ) -> SquadOut:
@@ -262,6 +286,7 @@ async def add_to_squad(
     player = await PlayerRepository(db, ctx).get_visible(data.player_id)
     if player is None:
         raise AppError(422, "invalid_player", "Player not found")
+    await _require_signed_if_outside(db, ctx, player)
     tp = await _register(
         db, ctx, team, player, data.squad_number, data.position, data.registered_on or _today()
     )

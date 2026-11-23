@@ -73,9 +73,32 @@ async def test_squad_membership_grants_visibility_to_that_org(client):
     p = await make_player(client, ta, oa, "Signed Player", 24, visibility="network")
     club = await make_club(client, tb, ob)
     team = await make_team(client, tb, ob, club)
-    await client.post(
+    # another club's player must be signed through recruitment before joining a team
+    blocked = await client.post(
         f"{API}/teams/{team['id']}/players", json={"player_id": p["id"]}, headers=hdr(tb, ob)
     )
+    assert blocked.status_code == 409 and blocked.json()["error"]["code"] == "signing_required"
+    req = await client.post(
+        f"{API}/recruitment/requirements",
+        json={"title": "Midfielder", "position": "CM"},
+        headers=hdr(tb, ob),
+    )
+    cand = await client.post(
+        f"{API}/recruitment/requirements/{req.json()['id']}/candidates",
+        json={"player_id": p["id"]},
+        headers=hdr(tb, ob),
+    )
+    for stage in ("negotiation", "signed"):
+        moved = await client.post(
+            f"{API}/recruitment/candidates/{cand.json()['id']}/stage",
+            json={"to": stage},
+            headers=hdr(tb, ob),
+        )
+        assert moved.status_code == 200, moved.text
+    added = await client.post(
+        f"{API}/teams/{team['id']}/players", json={"player_id": p["id"]}, headers=hdr(tb, ob)
+    )
+    assert added.status_code == 201, added.text
 
     # A switches the player back to private; B still sees them because they are in B's squad
     await client.patch(
