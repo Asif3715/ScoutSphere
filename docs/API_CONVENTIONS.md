@@ -168,3 +168,21 @@ New error codes: `photo_too_large` (413), `photo_too_small`, `unsupported_photo_
 
 ## Planned (later phases)
 Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.
+
+## Player accounts
+
+A player account (`account_type: "player"`) is a person, not a club: it has no organization. It gains a profile only when the organization that owns a player record approves a **claim**. These routes need a signed-in player account and no `X-Organization-Id`:
+
+| Route | Notes |
+|---|---|
+| `GET /me/player/search?name=&date_of_birth=` | Unclaimed records matching the name AND the exact date of birth (max 10). Nobody can browse for people |
+| `POST /me/player/claims` | `{player_id, date_of_birth, message?}`. A wrong date of birth, an unknown, archived or already-claimed player all return the same 404. One waiting request per account. Notifies members who can edit players |
+| `GET /me/player/claims`, `DELETE /me/player/claims/{id}` | Own requests; cancel a waiting one |
+| `GET /me/player`, `PATCH /me/player` | The linked profile (404 `no_profile` before approval) and what the player may edit: nationality, height, weight, foot, positions, biography, `visibility` (`private` or `network`), `open_to_offers`, `contact_email`. Name, date of birth, contract and medical data stay with the club |
+| `PUT/DELETE /me/player/photo` | Same processing as club uploads (multipart; crop fields optional) |
+
+The organization's side uses the normal header: `GET /player-claims?status=` and `POST /player-claims/{id}/decision` (`{decision: approved|rejected, note}`; a decline needs a note), both `players:write`. Another organization's claim is a 404. Approving declines any competing waiting claims for the same profile.
+
+Rules once a profile is claimed: only the player changes `visibility` (the organization gets 409 `controlled_by_player`; it can still edit everything else). Other organizations see `contact_email` only while `open_to_offers` is on, never for a minor; the owning organization always does. Players under 18 cannot change `visibility`, `open_to_offers` or `contact_email` (403 `guardian_required`) until a guardian-consent flow exists. `PlayerOut` gains `claimed`, `open_to_offers`, `contact_email`.
+
+New error codes: `no_profile`, `claim_pending`, `already_claimed`, `not_pending`, `controlled_by_player`, `guardian_required`, `contact_required`, `account_type_not_allowed`.

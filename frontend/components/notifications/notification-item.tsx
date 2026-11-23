@@ -18,7 +18,7 @@ import { apiFetch } from "@/lib/http";
 import type { AppNotification } from "@/lib/types";
 
 type Meta = {
-  category: "Assignments" | "Reports" | "Recruitment";
+  category: "Assignments" | "Reports" | "Recruitment" | "Players";
   tone: string;
   Icon: (p: { className?: string }) => React.ReactNode;
   /** Used on the preferences screen: "Notify me when…" */
@@ -122,6 +122,32 @@ export const NOTIFICATION_META: Record<string, Meta> = {
     Icon: ShareIcon,
     when: "A shortlist is shared with me",
   },
+};
+
+NOTIFICATION_META.player_claim_requested = {
+  category: "Players",
+  tone: INFO,
+  Icon: StarIcon,
+  when: "A player asks to link their account to your record",
+};
+NOTIFICATION_META.player_claim_approved = {
+  category: "Players",
+  tone: GOOD,
+  Icon: StarIcon,
+  when: "My request to link my profile is approved",
+};
+NOTIFICATION_META.player_claim_rejected = {
+  category: "Players",
+  tone: BAD,
+  Icon: StarIcon,
+  when: "My request to link my profile is declined",
+};
+
+NOTIFICATION_META.player_profile_updated = {
+  category: "Players",
+  tone: INFO,
+  Icon: StarIcon,
+  when: "A linked player edits their own profile",
 };
 
 const FALLBACK: Meta = {

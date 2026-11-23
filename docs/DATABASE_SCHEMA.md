@@ -64,3 +64,7 @@ Detailed column definitions are written with each phase's models and kept here i
 
 **Player photos (migration 0008):**
 - `players.photo_key` (storage key of the processed photo; the thumbnail key is derived) and `players.photo_updated_at`. Files live outside the database, under `MEDIA_ROOT` (a Docker volume locally); the storage layer is an interface so object storage can replace it.
+
+**Player accounts (migration 0009):**
+- `players.open_to_offers` (bool, default false) and `players.contact_email`; `players.claimed_by_user_id` (existing, unique) is set only by an approved claim.
+- `player_claims`: `player_id`, `user_id` (the claimant), `organization_id` (the owner at request time, who reviews), `status` (pending / approved / rejected / cancelled), `message`, `decided_by_user_id`, `decided_at`, `decision_note`. A partial unique index allows one pending claim per (player, user).

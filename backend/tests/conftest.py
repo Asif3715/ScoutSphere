@@ -29,7 +29,7 @@ from app.permissions.context import AuthContext  # noqa: E402
 from app.permissions.sync import sync_rbac  # noqa: E402
 
 TABLES_TO_CLEAN = [
-    "shortlist_shares", "shortlist_players", "shortlists", "recruitment_stage_history",
+    "player_claims", "shortlist_shares", "shortlist_players", "shortlists", "recruitment_stage_history",
     "recruitment_candidates", "recruitment_requirement_attributes", "recruitment_requirements",
     "audit_logs", "user_sessions", "invitations", "notification_preferences", "notifications",
     "scouting_report_reviews", "scouting_report_versions", "scouting_report_ratings",
@@ -109,7 +109,13 @@ async def client():
 
 
 # ---- factories --------------------------------------------------------------------
-async def make_user(email: str, *, platform_role: str | None = None, active: bool = True) -> User:
+async def make_user(
+    email: str,
+    *,
+    platform_role: str | None = None,
+    active: bool = True,
+    account_type: str = "standard",
+) -> User:
     async with SessionLocal() as db:
         user = User(
             email=email,
@@ -117,6 +123,7 @@ async def make_user(email: str, *, platform_role: str | None = None, active: boo
             full_name=email.split("@")[0],
             platform_role=platform_role,
             is_active=active,
+            account_type=account_type,
         )
         db.add(user)
         await db.commit()

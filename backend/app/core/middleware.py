@@ -15,7 +15,7 @@ _NUL_ESCAPE = re.compile(rb"(?<!\\)(?:\\\\)*\\u0000")
 _BODY_METHODS = {"POST", "PUT", "PATCH"}
 # Binary uploads: a larger cap, and no NUL scan (every image contains NUL bytes). Only these
 # exact routes, and only as multipart/form-data; everything else keeps the strict rules.
-_UPLOAD_PATH = re.compile(r"^/api/v1/players/[0-9a-fA-F-]{36}/photo$")
+_UPLOAD_PATH = re.compile(r"^/api/v1/(players/[0-9a-fA-F-]{36}|me/player)/photo$")
 UPLOAD_MAX_BYTES = 5 * 1024 * 1024 + 64 * 1024  # 5 MB photo + multipart overhead
 
 

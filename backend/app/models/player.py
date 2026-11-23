@@ -2,6 +2,7 @@ import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -16,7 +17,14 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
-from app.domain.football import FEET, MEDIA_KINDS, POSITIONS, SPELL_TYPES, VISIBILITIES
+from app.domain.football import (
+    CLAIM_STATUSES,
+    FEET,
+    MEDIA_KINDS,
+    POSITIONS,
+    SPELL_TYPES,
+    VISIBILITIES,
+)
 
 
 def _in(column: str, values: list[str]) -> str:
@@ -68,6 +76,12 @@ class Player(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         unique=True,
         nullable=True,
     )
+    # Set by the player once the profile is claimed. Other organizations see the contact email
+    # only while this is on (and never for a minor); the owning organization always does.
+    open_to_offers: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    contact_email: Mapped[str | None] = mapped_column(String(254), nullable=True)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -143,3 +157,39 @@ class PlayerMedia(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     uploaded_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+
+
+class PlayerClaim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """A player account asking to be linked to an existing player record. The organization
+    that owns the record decides; only an approved claim sets `players.claimed_by_user_id`."""
+
+    __tablename__ = "player_claims"
+    __table_args__ = (
+        CheckConstraint(_in("status", CLAIM_STATUSES), name="status_valid"),
+        # one open request per person and profile
+        Index(
+            "uq_player_claim_pending",
+            "player_id",
+            "user_id",
+            unique=True,
+            postgresql_where="status = 'pending'",
+        ),
+    )
+
+    player_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    # The organization that owned the record when the claim was made: the one that reviews it.
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[str] = mapped_column(String(12), nullable=False, default="pending")
+    message: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    decided_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    decision_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
