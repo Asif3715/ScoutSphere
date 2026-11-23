@@ -24,6 +24,7 @@ from app.schemas.teams import (
     TeamUpdate,
 )
 from app.services.audit import record_audit
+from app.services.notifications import notify
 
 TEAM_NOT_FOUND = AppError(404, "not_found", "Team not found")
 MEMBER_NOT_FOUND = AppError(404, "not_found", "Squad member not found")
@@ -264,6 +265,7 @@ async def add_to_squad(
     tp = await _register(
         db, ctx, team, player, data.squad_number, data.position, data.registered_on or _today()
     )
+    await _tell_player(db, player, team, "joined")
     await record_audit(
         db, action="squad.add", outcome="success", actor_user_id=ctx.user_id,
         organization_id=ctx.organization_id, target_type="team", target_id=str(team.id),
@@ -289,6 +291,27 @@ async def _active_member(
     if tp is None:
         raise MEMBER_NOT_FOUND
     return tp
+
+
+async def _tell_player(
+    db: AsyncSession, player: Player, team: Team, kind: str, *, moved: bool = False
+) -> None:
+    """Lets a player with a linked account know about their own squad status. (Squad
+    membership is the club's private data, but this is the player's own career.)"""
+    if player.claimed_by_user_id is None:
+        return
+    club = await db.scalar(select(Club.name).where(Club.id == team.club_id))
+    where = f"{team.name} at {club}" if club else team.name
+    if kind == "joined":
+        title = f"You have moved to {where}" if moved else f"You have joined {where}"
+        body = "Your career history has been updated."
+    else:
+        title, body = f"You have left {where}", "Your career history has been updated."
+    await notify(
+        db, user_id=player.claimed_by_user_id,
+        type="squad_joined" if kind == "joined" else "squad_left",
+        title=title, body=body, link_path="/player",
+    )  # fmt: skip
 
 
 async def _leave(db: AsyncSession, tp: TeamPlayer) -> date:
@@ -337,6 +360,8 @@ async def release_from_squad(
     team = await _team(db, ctx, team_id)
     tp = await _active_member(db, ctx, team, membership_id)
     await _leave(db, tp)
+    released = await db.get(Player, tp.player_id)
+    await _tell_player(db, released, team, "left")
     await record_audit(
         db, action="squad.release", outcome="success", actor_user_id=ctx.user_id,
         organization_id=ctx.organization_id, target_type="team", target_id=str(team.id),
@@ -362,6 +387,7 @@ async def transfer_squad_member(
     position = tp.position
     await _leave(db, tp)
     await _register(db, ctx, target, player, squad_number, position, _today())
+    await _tell_player(db, player, target, "joined", moved=True)
     await record_audit(
         db, action="squad.transfer", outcome="success", actor_user_id=ctx.user_id,
         organization_id=ctx.organization_id, target_type="team", target_id=str(team.id),

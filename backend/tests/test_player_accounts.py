@@ -400,3 +400,114 @@ async def test_staff_can_switch_these_notifications_off(client):
     await client.patch(ME, json={"height_cm": 181}, headers=h)
     assert await _updates(client, owner_t) == []
     assert len(await _updates(client, admin_h["Authorization"].split()[1])) == 1
+
+
+# ---- squads: the player hears about it; managers are prompted when a candidate signs ------
+from tests.helpers import make_team  # noqa: E402
+from tests.test_recruitment import pipeline  # noqa: E402
+
+REC = f"{API}/recruitment"
+
+
+async def _squad_news(client, h):
+    items = (await client.get(f"{API}/notifications", headers=h)).json()["items"]
+    return [n for n in items if n["type"] in ("squad_joined", "squad_left")]
+
+
+async def test_player_is_told_when_added_moved_and_released(client):
+    org, player, owner_t, admin_h, _, h = await world(client)
+    await approved(client, admin_h, h, player)
+    club = await make_club(client, owner_t, org["id"], "Alpha Senior")
+    first = await make_team(client, owner_t, org["id"], club, "First Team")
+    youth = await make_team(client, owner_t, org["id"], club, "U21", "u21")
+    oh = hdr(owner_t, org["id"])
+
+    added = await client.post(
+        f"{API}/teams/{first['id']}/players", json={"player_id": player["id"]}, headers=oh
+    )
+    assert added.status_code == 201, added.text
+    [n] = await _squad_news(client, h)
+    assert (
+        n["type"] == "squad_joined" and n["title"] == "You have joined First Team at Alpha Senior"
+    )
+    assert n["link_path"] == "/player"
+
+    member = added.json()["players"][0]["membership_id"]
+    moved = await client.post(
+        f"{API}/teams/{first['id']}/players/{member}/transfer",
+        json={"to_team_id": youth["id"]},
+        headers=oh,
+    )
+    assert moved.status_code == 200, moved.text
+    assert (await _squad_news(client, h))[0]["title"] == "You have moved to U21 at Alpha Senior"
+
+    new_member = moved.json()["players"][0]["membership_id"]
+    rel = await client.delete(f"{API}/teams/{youth['id']}/players/{new_member}", headers=oh)
+    assert rel.status_code == 200
+    news = await _squad_news(client, h)
+    assert (
+        news[0]["type"] == "squad_left" and news[0]["title"] == "You have left U21 at Alpha Senior"
+    )
+    assert len(news) == 3
+
+
+async def test_players_without_an_account_are_not_notified_and_nothing_breaks(client):
+    owner_t, org = await setup_org(client)
+    player = await make_player(client, owner_t, org["id"], "No Account", 21)
+    club = await make_club(client, owner_t, org["id"])
+    team = await make_team(client, owner_t, org["id"], club)
+    r = await client.post(
+        f"{API}/teams/{team['id']}/players",
+        json={"player_id": player["id"]},
+        headers=hdr(owner_t, org["id"]),
+    )
+    assert r.status_code == 201, r.text
+
+
+async def test_signing_a_candidate_prompts_club_managers_to_add_them_to_a_team(client):
+    from tests.helpers import scouting_setup
+
+    s = await scouting_setup(client)
+    req, p, cand = await pipeline(client, s)
+    for stage in ("negotiation", "signed"):
+        r = await client.post(
+            f"{REC}/candidates/{cand['id']}/stage", json={"to": stage}, headers=s.rm_h
+        )
+        assert r.status_code == 200, r.text
+    # the recruitment manager did the signing; the owner can put players in teams
+    owner = (await client.get(f"{API}/notifications", headers=bearer(s.owner_t))).json()["items"]
+    [n] = [x for x in owner if x["type"] == "candidate_signed"]
+    assert (
+        n["title"] == "Pipeline Player has signed" and n["link_path"] == f"/recruitment/{req['id']}"
+    )
+    rm = (await client.get(f"{API}/notifications", headers=s.rm_h)).json()["items"]
+    assert not [
+        x for x in rm if x["type"] == "candidate_signed"
+    ]  # no squad permission, and they did it
+    detail = (await client.get(f"{REC}/candidates/{cand['id']}", headers=s.rm_h)).json()
+    assert detail["stage"] == "signed" and detail["squad_team_id"] is None
+
+
+async def test_no_prompt_when_the_player_is_already_in_a_team_and_candidates_show_their_team(
+    client,
+):
+    from tests.helpers import scouting_setup
+
+    s = await scouting_setup(client)
+    req, p, cand = await pipeline(client, s)
+    club = await make_club(client, s.owner_t, s.org["id"], "Alpha Senior")
+    team = await make_team(client, s.owner_t, s.org["id"], club, "First Team")
+    await client.post(
+        f"{API}/teams/{team['id']}/players", json={"player_id": p["id"]}, headers=s.owner_h
+    )
+    await client.post(
+        f"{REC}/candidates/{cand['id']}/stage", json={"to": "negotiation"}, headers=s.rm_h
+    )
+    await client.post(f"{REC}/candidates/{cand['id']}/stage", json={"to": "signed"}, headers=s.rm_h)
+    owner = (await client.get(f"{API}/notifications", headers=bearer(s.owner_t))).json()["items"]
+    assert not [x for x in owner if x["type"] == "candidate_signed"]
+    detail = (await client.get(f"{REC}/candidates/{cand['id']}", headers=s.rm_h)).json()
+    assert (
+        detail["squad_team_id"] == team["id"]
+        and detail["squad_team_name"] == "First Team · Alpha Senior"
+    )

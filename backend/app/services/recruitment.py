@@ -17,7 +17,10 @@ from app.domain.recruitment import (
     can_move,
 )
 from app.models.assignment import Assignment
+from app.models.club import Club
+from app.models.organization import OrganizationMember
 from app.models.player import Player, PlayerCareer, PlayerPosition
+from app.models.rbac import Role
 from app.models.recruitment import (
     RecruitmentCandidate,
     RecruitmentRequirement,
@@ -25,8 +28,10 @@ from app.models.recruitment import (
     RequirementAttribute,
 )
 from app.models.report import ScoutingReport, ScoutingReportRating
+from app.models.team import Team, TeamPlayer
 from app.models.user import User
 from app.permissions import catalog
+from app.permissions.catalog import ROLES
 from app.permissions.context import AuthContext
 from app.repositories.players import PlayerFilters, PlayerRepository
 from app.schemas.assignments import AssignmentCreate
@@ -535,8 +540,25 @@ async def _candidate_out(
         if assignment_ids
         else {}
     )
+    squads = {
+        pid: (tid, f"{tname} · {cname}")
+        for pid, tid, tname, cname in (
+            await db.execute(
+                select(TeamPlayer.player_id, Team.id, Team.name, Club.name)
+                .join(Team, Team.id == TeamPlayer.team_id)
+                .join(Club, Club.id == Team.club_id)
+                .where(
+                    TeamPlayer.organization_id == ctx.organization_id,
+                    TeamPlayer.player_id.in_({c.player_id for c in rows}),
+                    TeamPlayer.status == "active",
+                )
+            )
+        ).all()
+    }
     return [
         CandidateOut(
+            squad_team_id=squads.get(c.player_id, (None, None))[0],
+            squad_team_name=squads.get(c.player_id, (None, None))[1],
             id=c.id, requirement_id=c.requirement_id, requirement_title=titles[c.requirement_id],
             player_id=c.player_id, player_name=players[c.player_id].full_name,
             age=age_on(players[c.player_id].date_of_birth),
@@ -713,6 +735,22 @@ async def get_candidate(
     )  # fmt: skip
 
 
+async def _squad_managers(db: AsyncSession, org_id: uuid.UUID) -> list[uuid.UUID]:
+    """People who can put a player in a team (those allowed to manage clubs)."""
+    keys = [k for k, (_, _, perms) in ROLES.items() if catalog.CLUBS_MANAGE in perms]
+    return list(
+        await db.scalars(
+            select(OrganizationMember.user_id)
+            .join(Role, Role.id == OrganizationMember.role_id)
+            .where(
+                OrganizationMember.organization_id == org_id,
+                OrganizationMember.status == "active",
+                Role.key.in_(keys),
+            )
+        )
+    )
+
+
 async def _apply_stage(
     db: AsyncSession, ctx: AuthContext, c: RecruitmentCandidate, to: str, note: str | None
 ) -> None:
@@ -735,6 +773,24 @@ async def _apply_stage(
             body=f"Requirement: {req.title}", link_path=f"/recruitment/{req.id}",
             organization_id=c.organization_id,
         )  # fmt: skip
+    if to == "signed" and player is not None:
+        in_squad = await db.scalar(
+            select(TeamPlayer.id).where(
+                TeamPlayer.organization_id == c.organization_id,
+                TeamPlayer.player_id == c.player_id,
+                TeamPlayer.status == "active",
+            )
+        )
+        if in_squad is None:  # nothing left to do if they are already registered with a team
+            for uid in await _squad_managers(db, c.organization_id):
+                if uid != ctx.user_id:
+                    await notify(
+                        db, user_id=uid, type="candidate_signed",
+                        title=f"{player.full_name} has signed",
+                        body="Add them to a team so their squad and career records are up to date.",
+                        link_path=f"/recruitment/{c.requirement_id}",
+                        organization_id=c.organization_id,
+                    )  # fmt: skip
 
 
 async def move_stage(

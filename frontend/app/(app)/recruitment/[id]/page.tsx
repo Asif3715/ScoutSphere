@@ -21,6 +21,7 @@ import {
   type Page,
   type Requirement,
   type Scout,
+  type Team,
 } from "@/lib/types";
 
 const input =
@@ -277,6 +278,123 @@ function Pipeline({
   );
 }
 
+/** A signed candidate still has to be put in a team: do it here, or see where they are. */
+function JoinTeam({ c, onDone }: { c: Candidate; onDone: () => void }) {
+  const { activeOrgId, can } = useAuth();
+  const manage = can("clubs:manage");
+  const [teamId, setTeamId] = useState("");
+  const [number, setNumber] = useState("");
+  const [from, setFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const teams = useQuery({
+    queryKey: ["teams", activeOrgId],
+    queryFn: () => apiFetch<Team[]>("/teams"),
+    enabled: manage && !c.squad_team_id,
+  });
+
+  if (c.squad_team_id)
+    return (
+      <p className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        <span className="chip bg-ok-soft text-ok">In squad</span>
+        <Link
+          href={`/teams/${c.squad_team_id}`}
+          className="text-link underline"
+        >
+          {c.squad_team_name}
+        </Link>
+      </p>
+    );
+  if (!manage)
+    return (
+      <p className="mt-2 rounded-[2px] border-l-4 border-volt bg-volt/10 p-2 text-xs">
+        Signed. An owner or administrator has been asked to add them to a team.
+      </p>
+    );
+
+  async function add() {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch(`/teams/${teamId}/players`, {
+        method: "POST",
+        json: {
+          player_id: c.player_id,
+          squad_number: number ? Number(number) : null,
+          registered_on: from || null,
+        },
+      });
+      onDone();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Request failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-2 space-y-2 rounded-[2px] border-l-4 border-volt bg-volt/10 p-3">
+      <p className="text-sm font-semibold">
+        Signed. Add {c.player_name} to a team
+      </p>
+      <p className="text-xs opacity-70">
+        This puts them in the squad and starts their career record at that club.
+        If they have their own account, they&apos;ll be told.
+      </p>
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="eyebrow opacity-70">Team</span>
+          <select
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
+            className={input}
+          >
+            <option value="">Choose a team…</option>
+            {teams.data?.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} · {t.club_name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="eyebrow opacity-70">Squad no.</span>
+          <input
+            inputMode="numeric"
+            maxLength={2}
+            value={number}
+            onChange={(e) => setNumber(e.target.value.replace(/\D/g, ""))}
+            className={`${input} w-16`}
+            placeholder="—"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="eyebrow opacity-70">Starts</span>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className={input}
+          />
+        </label>
+        <Button disabled={!teamId || busy} onClick={add}>
+          {busy ? "Adding…" : "Add to team"}
+        </Button>
+      </div>
+      {teams.data?.length === 0 && (
+        <p className="text-xs opacity-70">
+          No teams yet.{" "}
+          <Link href="/teams" className="text-link underline">
+            Create one
+          </Link>{" "}
+          first.
+        </p>
+      )}
+      <ErrorText>{error}</ErrorText>
+    </div>
+  );
+}
+
 function CandidateRow({
   c,
   manage,
@@ -410,6 +528,8 @@ function CandidateRow({
             )}
         </div>
       )}
+
+      {c.stage === "signed" && <JoinTeam c={c} onDone={onChange} />}
 
       {assigning && (
         <div className="mt-2 flex flex-wrap items-center gap-2">

@@ -183,6 +183,9 @@ class CandidateOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     photo_thumb_url: str | None = None
+    # The team of the caller's organization the player is currently registered with, if any.
+    squad_team_id: uuid.UUID | None = None
+    squad_team_name: str | None = None
 
 
 class CandidateDetail(CandidateOut):
