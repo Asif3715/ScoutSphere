@@ -19,6 +19,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import User, UserSession
+from app.services import login_throttle
 from app.services.audit import record_audit
 
 REUSE_LEEWAY = timedelta(seconds=10)
@@ -86,6 +87,7 @@ async def _issue_session(
 async def login(
     db: AsyncSession, *, email: str, password: str, ua: str | None, ip: str | None
 ) -> IssuedTokens:
+    await login_throttle.check(email, ip)
     user = await db.scalar(select(User).where(User.email == email.strip()))
     # Always run one Argon2 verification so unknown emails cost the same as wrong passwords.
     ok = verify_password(password, user.password_hash if user else DUMMY_HASH)
@@ -96,6 +98,7 @@ async def login(
             metadata={"reason": "bad_credentials"},
         )  # fmt: skip
         await db.commit()
+        await login_throttle.record_failure(email, ip)
         raise INVALID_CREDENTIALS
     if not user.is_active:
         await record_audit(
@@ -108,6 +111,7 @@ async def login(
     if password_needs_rehash(user.password_hash):
         user.password_hash = hash_password(password)
     user.last_login_at = _now()
+    await login_throttle.clear(email)
     issued = await _issue_session(db, user, family_id=None, ua=ua, ip=ip)
     await record_audit(
         db, action="auth.login", outcome="success", actor_user_id=user.id, ip_address=ip

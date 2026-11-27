@@ -4,6 +4,7 @@ import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, update
 
@@ -354,3 +355,73 @@ async def test_cors_accepts_both_loopback_spellings_only(client):
         assert r.headers["access-control-allow-credentials"] == "true"
     r = await preflight("http://evil.example")
     assert "access-control-allow-origin" not in r.headers
+
+
+# ---- production configuration guard ------------------------------------------------------
+def _settings(**kw):
+    from app.core.config import Settings
+
+    base = dict(
+        environment="production",
+        jwt_secret="x" * 48,
+        database_url="postgresql+asyncpg://app:s3cret-pass@db:5432/app",
+        cookie_secure=True,
+        debug=False,
+        cors_origins=["https://app.example.com"],
+        frontend_url="https://app.example.com",
+    )
+    return Settings(**{**base, **kw}, _env_file=None)
+
+
+def test_a_properly_configured_production_passes():
+    from app.core.security import config_problems
+
+    assert config_problems(_settings()) == []
+
+
+@pytest.mark.parametrize(
+    ("override", "fragment"),
+    [
+        ({"jwt_secret": "dev-only-insecure-secret-change-me"}, "JWT_SECRET"),
+        ({"jwt_secret": "short"}, "JWT_SECRET"),
+        ({"database_url": "postgresql+asyncpg://scoutsphere:scoutsphere@db/x"}, "DATABASE_URL"),
+        ({"cookie_secure": False}, "COOKIE_SECURE"),
+        ({"debug": True}, "DEBUG"),
+        ({"cors_origins": ["http://localhost:3000"]}, "https://"),
+        ({"frontend_url": "http://app.example.com"}, "https://"),
+        ({"environment": "prod"}, "ENVIRONMENT"),  # a typo must not slip through
+    ],
+)
+def test_insecure_production_settings_are_refused(override, fragment):
+    from app.core.security import config_problems
+
+    problems = config_problems(_settings(**override))
+    assert problems and any(fragment in p for p in problems)
+
+
+def test_development_settings_are_fine_on_a_developer_machine():
+    from app.core.config import Settings
+    from app.core.security import config_problems
+
+    assert config_problems(Settings(environment="local", _env_file=None)) == []
+
+
+async def test_cors_only_allows_the_methods_and_headers_the_app_uses(client):
+    ok = await client.options(
+        "/api/v1/health",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "PATCH",
+            "Access-Control-Request-Headers": "authorization,x-organization-id,content-type",
+        },
+    )
+    assert ok.status_code == 200
+    bad = await client.options(
+        "/api/v1/health",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "x-evil-header",
+        },
+    )
+    assert bad.status_code == 400

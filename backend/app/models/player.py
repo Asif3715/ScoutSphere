@@ -174,6 +174,13 @@ class PlayerClaim(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             unique=True,
             postgresql_where="status = 'pending'",
         ),
+        # one waiting request per account, whichever player it is for
+        Index(
+            "uq_player_claim_pending_per_user",
+            "user_id",
+            unique=True,
+            postgresql_where="status = 'pending'",
+        ),
     )
 
     player_id: Mapped[uuid.UUID] = mapped_column(

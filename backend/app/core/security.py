@@ -79,9 +79,35 @@ def parse_refresh_token(token: str) -> tuple[uuid.UUID, str] | None:
         return None
 
 
+DEV_ENVIRONMENTS = {"local", "test"}
+KNOWN_ENVIRONMENTS = DEV_ENVIRONMENTS | {"staging", "production"}
+
+
+def config_problems(s) -> list[str]:
+    """Everything about these settings that is unsafe outside a developer machine."""
+    problems = []
+    if s.environment not in KNOWN_ENVIRONMENTS:
+        problems.append(f"ENVIRONMENT={s.environment!r} is not one of {sorted(KNOWN_ENVIRONMENTS)}")
+    if s.environment in DEV_ENVIRONMENTS:
+        return problems
+    if s.jwt_secret.startswith("dev-only") or len(s.jwt_secret) < 32:
+        problems.append("JWT_SECRET must be a random value of at least 32 characters")
+    if ":scoutsphere@" in s.database_url:
+        problems.append("DATABASE_URL uses the default development password")
+    if not s.cookie_secure:
+        problems.append("COOKIE_SECURE must be true (cookies only over HTTPS)")
+    if s.debug:
+        problems.append("DEBUG must be false")
+    for origin in [*s.cors_origins, s.frontend_url]:
+        if not origin.startswith("https://") or any(
+            host in origin for host in ("localhost", "127.0.0.1", "[::1]")
+        ):
+            problems.append(f"{origin!r} must be an https:// address that is not loopback")
+    return problems
+
+
 def assert_secure_config() -> None:
-    s = get_settings()
-    if s.environment not in {"local", "test"} and (
-        s.jwt_secret.startswith("dev-only") or len(s.jwt_secret) < 32
-    ):
-        raise RuntimeError("JWT_SECRET must be set to a strong value outside local/test")
+    """Refuses to start with development settings anywhere but a developer machine."""
+    problems = config_problems(get_settings())
+    if problems:
+        raise RuntimeError("Insecure configuration:\n- " + "\n- ".join(problems))

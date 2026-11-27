@@ -511,3 +511,16 @@ async def test_no_prompt_when_the_player_is_already_in_a_team_and_candidates_sho
         detail["squad_team_id"] == team["id"]
         and detail["squad_team_name"] == "First Team · Alpha Senior"
     )
+
+
+async def test_two_claims_sent_at_once_cannot_both_be_pending(client):
+    import asyncio
+
+    org, player, owner_t, admin_h, _, h = await world(client)
+    other = await make_player(client, owner_t, org["id"], "Ana Costa", 22)
+    results = await asyncio.gather(claim(client, h, player), claim(client, h, other))
+    codes = sorted(r.status_code for r in results)
+    assert codes == [201, 409], [r.text for r in results]
+    assert [c["status"] for c in (await client.get(f"{ME}/claims", headers=h)).json()] == [
+        "pending"
+    ]

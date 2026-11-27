@@ -37,7 +37,7 @@ services:
       redis: {condition: service_healthy}
 
   frontend:
-    build: ./frontend
+    build: {context: ./frontend, target: dev}  # `--target prod` builds the production image
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
       INTERNAL_API_URL: http://backend:8000

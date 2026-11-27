@@ -22,10 +22,17 @@ class Settings(BaseSettings):
     # Auth. jwt_secret MUST be overridden outside local/test (enforced in security.py).
     jwt_secret: str = "dev-only-insecure-secret-change-me"
     jwt_algorithm: str = "HS256"
-    access_token_minutes: int = 15
+    # Short-lived: a token keeps working until it expires, even after logout.
+    access_token_minutes: int = 5
     refresh_token_days: int = 14
     refresh_cookie_name: str = "refresh_token"
     cookie_secure: bool = False  # True behind HTTPS in staging/production
+
+    # Sign-in throttling (counted in Redis). Failures per email address and per IP address
+    # within the window; reaching the limit blocks further attempts until the window ends.
+    login_window_minutes: int = 15
+    login_max_failures_per_account: int = 5
+    login_max_failures_per_ip: int = 30
 
     # Uploaded media (player photos). Local disk now; the storage layer is an interface so
     # object storage (S3 / MinIO) can replace it without touching callers.
