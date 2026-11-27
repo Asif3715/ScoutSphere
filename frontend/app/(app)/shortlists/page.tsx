@@ -10,6 +10,7 @@ import { Field } from "@/components/auth/field";
 import { Button, Card, Empty, ErrorText, Pagination } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { tabKeys } from "@/lib/tabs";
 import { shortlistSchema, type ShortlistValues } from "@/lib/schemas";
 import { PRIORITIES, type Page, type ShortlistSummary } from "@/lib/types";
 
@@ -66,12 +67,13 @@ export default function ShortlistsPage() {
       <p className="text-xs opacity-60">
         A shortlist is private to you until you share it with colleagues.
       </p>
-      <div role="tablist" className="flex gap-2">
+      <div role="tablist" onKeyDown={tabKeys} className="flex gap-2">
         {(["all", "mine", "shared"] as const).map((s) => (
           <Button
             key={s}
             role="tab"
             aria-selected={scope === s}
+            tabIndex={scope === s ? 0 : -1}
             variant={scope === s ? "primary" : "secondary"}
             onClick={() => (setScope(s), setPage(1))}
           >

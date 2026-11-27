@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Literal, get_args
 
 from pydantic import (
     AfterValidator,
@@ -213,4 +213,4 @@ class MediaOut(BaseModel):
     created_at: datetime
 
 
-assert set(POSITIONS) == set(Position.__args__)  # schema stays in sync with the domain list
+assert set(POSITIONS) == set(get_args(Position))  # schema stays in sync with the domain list

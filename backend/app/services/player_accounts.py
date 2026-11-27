@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
+from app.db.lookup import get_required
 from app.domain.football import age_on, is_minor
 from app.models.club import Club
 from app.models.notification import Notification
@@ -39,7 +40,7 @@ from app.schemas.players import CurrentClub
 from app.services import media
 from app.services.audit import record_audit
 from app.services.notifications import notify
-from app.services.players import _photo
+from app.services.players import photo_path
 
 NO_PROFILE = AppError(404, "no_profile", "Your account is not linked to a player profile yet")
 NOT_FOUND = AppError(404, "not_found", "Player not found")
@@ -149,6 +150,7 @@ async def create_claim(db: AsyncSession, user: User, data: ClaimCreate) -> MyCla
     if player is None:
         raise NOT_FOUND
     org_id = player.owner_organization_id
+    assert org_id is not None  # the query only matches players that have an owner
     claim = PlayerClaim(
         player_id=player.id, user_id=user.id, organization_id=org_id, message=data.message
     )
@@ -220,8 +222,8 @@ async def list_org_claims(
     claims = (await db.scalars(stmt.order_by(PlayerClaim.created_at.desc()).limit(100))).all()
     out = []
     for c in claims:
-        player = await db.get(Player, c.player_id)
-        who = await db.get(User, c.user_id)
+        player = await get_required(db, Player, c.player_id)
+        who = await get_required(db, User, c.user_id)
         decider = await db.get(User, c.decided_by_user_id) if c.decided_by_user_id else None
         out.append(
             OrgClaimOut(
@@ -262,6 +264,8 @@ async def decide_claim(
         raise AppError(422, "comment_required", "Tell them why, so they can try again correctly")
 
     player = await db.scalar(select(Player).where(Player.id == c.player_id).with_for_update())
+    if player is None:  # the claim cascades away with its player, so this cannot happen
+        raise AppError(404, "not_found", "Player not found")
     if data.decision == "approved":
         if player.claimed_by_user_id is not None or player.archived_at is not None:
             raise AppError(409, "already_claimed", "This profile can no longer be claimed")
@@ -388,7 +392,7 @@ async def _profile(db: AsyncSession, p: Player) -> SelfProfile:
         nationality=p.nationality, height_cm=p.height_cm, weight_kg=p.weight_kg,
         preferred_foot=p.preferred_foot, primary_position=p.primary_position,
         secondary_positions=secs, biography=p.biography,
-        photo_url=_photo(p, thumb=False), photo_thumb_url=_photo(p, thumb=True),
+        photo_url=photo_path(p, thumb=False), photo_thumb_url=photo_path(p, thumb=True),
         has_uploaded_photo=p.photo_key is not None, visibility=p.visibility,
         open_to_offers=p.open_to_offers, contact_email=p.contact_email,
         current_club=await _current_club(db, p.id),

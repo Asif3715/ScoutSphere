@@ -11,6 +11,8 @@ import { RequirementForm } from "@/components/recruitment/requirement-form";
 import { Button, Card, Empty, ErrorText, Pagination } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { tabKeys } from "@/lib/tabs";
+import { fetchAll } from "@/lib/fetch-all";
 import { allowedStages } from "@/lib/stages";
 import {
   STAGE_ORDER,
@@ -179,7 +181,7 @@ export default function RequirementPage() {
         </Card>
       )}
 
-      <div role="tablist" className="flex gap-2">
+      <div role="tablist" onKeyDown={tabKeys} className="flex gap-2">
         {(
           [
             ["pipeline", `Pipeline (${r.candidate_count})`],
@@ -190,6 +192,7 @@ export default function RequirementPage() {
             key={key}
             role="tab"
             aria-selected={tab === key}
+            tabIndex={tab === key ? 0 : -1}
             variant={tab === key ? "primary" : "secondary"}
             onClick={() => setTab(key)}
           >
@@ -236,8 +239,8 @@ function Pipeline({
   const list = useQuery({
     queryKey: ["candidates", activeOrgId, requirementId],
     queryFn: () =>
-      apiFetch<Page<Candidate>>(
-        `/recruitment/requirements/${requirementId}/candidates?page_size=100`,
+      fetchAll<Candidate>(
+        `/recruitment/requirements/${requirementId}/candidates`,
       ),
     enabled: !!activeOrgId,
   });
@@ -423,7 +426,7 @@ function CandidateRow({
   });
   const scouts = useQuery({
     queryKey: ["scouts", activeOrgId, "options"],
-    queryFn: () => apiFetch<Page<Scout>>("/scouts?page_size=100"),
+    queryFn: () => fetchAll<Scout>("/scouts"),
     enabled: assigning,
   });
 

@@ -29,6 +29,8 @@ export function authErrorMessage(
   switch (e.code) {
     case "invalid_credentials":
       return "The email or password is incorrect. Passwords are case-sensitive, so check Caps Lock.";
+    case "too_many_attempts":
+      return e.message; // says how long to wait
     case "account_disabled":
       return "This account has been disabled. Contact your organization's administrator.";
     case "email_taken":

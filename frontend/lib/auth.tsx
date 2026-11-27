@@ -6,10 +6,15 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+
+import { setFlash } from "@/lib/flash";
 import {
+  SESSION_EXPIRED,
   apiFetch,
   refreshSession,
   setAccessToken,
@@ -48,15 +53,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const activeRef = useRef<string | null>(null);
 
-  const selectOrg = useCallback((id: string | null) => {
-    setActiveOrg(id);
-    setActiveOrgId(id);
-    try {
-      if (id) sessionStorage.setItem("activeOrg", id);
-      else sessionStorage.removeItem("activeOrg");
-    } catch {}
-  }, []);
+  const selectOrg = useCallback(
+    (id: string | null) => {
+      // Cached data belongs to the organization it was fetched for: drop it on a switch so
+      // nothing from one organization is ever shown under another.
+      if (activeRef.current !== id) queryClient.clear();
+      activeRef.current = id;
+      setActiveOrgId(id);
+      setActiveOrg(id);
+      try {
+        if (id) sessionStorage.setItem("activeOrg", id);
+        else sessionStorage.removeItem("activeOrg");
+      } catch {}
+    },
+    [queryClient],
+  );
+
+  // The session ended while the app was open (refresh token expired or revoked elsewhere).
+  useEffect(() => {
+    const onExpired = () => {
+      setAccessToken(null);
+      setUser(null);
+      setMemberships([]);
+      selectOrg(null);
+      queryClient.clear();
+      setFlash({
+        kind: "info",
+        text: "Your session has ended. Please sign in again.",
+      });
+    };
+    window.addEventListener(SESSION_EXPIRED, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED, onExpired);
+  }, [queryClient, selectOrg]);
 
   const loadProfile = useCallback(
     async (preferOrgId?: string) => {
@@ -102,9 +133,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         auth: false,
       });
       setAccessToken(data.access_token);
+      queryClient.clear(); // nothing cached for a previous user survives a new sign-in
       await loadProfile();
     },
-    [loadProfile],
+    [loadProfile, queryClient],
   );
 
   const register = useCallback(async (v: RegisterValues) => {
@@ -128,8 +160,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       selectOrg(null);
       setUser(null);
       setMemberships([]);
+      queryClient.clear();
     }
-  }, [selectOrg]);
+  }, [selectOrg, queryClient]);
 
   const can = useCallback(
     (permission: string) =>

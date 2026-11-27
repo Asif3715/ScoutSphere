@@ -68,13 +68,13 @@ async def compare_players(
 
     # most recent club spell per player (objective "recent performance")
     recent: dict[uuid.UUID, tuple[str, PlayerCareer]] = {}
-    for spell, club_name in await db.execute(
+    for career, career_club in await db.execute(
         select(PlayerCareer, Club.name)
         .join(Club, Club.id == PlayerCareer.club_id)
         .where(PlayerCareer.player_id.in_(player_ids))
         .order_by(PlayerCareer.start_date)
     ):
-        recent[spell.player_id] = (club_name, spell)
+        recent[career.player_id] = (career_club, career)
 
     recs: dict[uuid.UUID, dict[str, int]] = {pid: {} for pid in player_ids}
     latest: dict[uuid.UUID, str | None] = {pid: None for pid in player_ids}
@@ -88,13 +88,18 @@ async def compare_players(
         )
         .order_by(ScoutingReport.submitted_at)
     ):
+        if rec is None:  # filtered out by the query; keeps the type checker honest
+            continue
         recs[pid][rec] = recs[pid].get(rec, 0) + 1
         latest[pid] = rec
 
     out: list[ComparePlayer] = []
     for p in players:
         f = facts[p.id]
-        club_name, spell = recent.get(p.id, (None, None))
+        club_name: str | None = None
+        spell: PlayerCareer | None = None
+        if p.id in recent:
+            club_name, spell = recent[p.id]
         out.append(
             ComparePlayer(
                 player=build_summary(p, ctx, clubs), date_of_birth=p.date_of_birth.isoformat(),

@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # The repository-root .env is read whether the app runs from the root (Docker, tests via
+    # env vars) or from backend/; a backend/.env, if present, overrides it.
+    model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 
     app_name: str = "ScoutSphere"
     environment: str = "local"  # local | test | staging | production
@@ -38,7 +40,9 @@ class Settings(BaseSettings):
     # object storage (S3 / MinIO) can replace it without touching callers.
     media_root: str = "media"
     photo_max_bytes: int = 5 * 1024 * 1024
-    media_url_hours: int = 24  # lifetime of signed photo URLs (rounded to stay cacheable)
+    # Signed photo URLs live 1 to 2 of these windows (rounded so a URL stays cacheable).
+    # A leaked link stops working within hours, not days.
+    media_url_hours: int = 2
 
     @property
     def sync_database_url(self) -> str:

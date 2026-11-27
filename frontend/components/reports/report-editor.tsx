@@ -9,6 +9,7 @@ import { Field } from "@/components/auth/field";
 import { Button, Card, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { fetchAll } from "@/lib/fetch-all";
 import { reportSchema, type ReportValues } from "@/lib/schemas";
 import {
   POSITIONS,
@@ -89,8 +90,7 @@ export function ReportEditor({
   });
   const matches = useQuery({
     queryKey: ["matches", activeOrgId, "report-options"],
-    queryFn: () =>
-      apiFetch<Page<MatchSummary>>("/matches?page_size=100&status=finished"),
+    queryFn: () => fetchAll<MatchSummary>("/matches?status=finished"),
     enabled: !!activeOrgId && !editing && !defaults?.match_id,
   });
 

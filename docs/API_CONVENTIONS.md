@@ -166,8 +166,14 @@ Processing: JPEG, PNG or WebP up to 5 MB, at least 100x100. Decoded with Pillow 
 
 New error codes: `photo_too_large` (413), `photo_too_small`, `unsupported_photo_type`, `invalid_photo`, `invalid_crop`.
 
-## Planned (later phases)
-Pagination (`page`, `page_size`), sorting (`sort`), filtering by query params, rate limiting, password recovery and email verification.
+## Lists, limits and sign-in protection
+Lists are paginated with `page` and `page_size` (default 25, at most 100) and return `{items, total, page, page_size}`; most also take `sort` and filter query parameters. Pickers in the frontend fetch every page (`lib/fetch-all.ts`) instead of stopping at 100.
+
+Sign-in is throttled in Redis: 5 failed attempts per email address, or 30 per client IP, within 15 minutes return 429 `too_many_attempts` with a `Retry-After` header until the window ends. Unknown emails are counted the same as real ones. If Redis is unavailable, sign-in keeps working (fails open) and the problem is logged. The client IP is the socket address; behind a reverse proxy, run uvicorn with `--proxy-headers` and `--forwarded-allow-ips` so it is the real client.
+
+Access tokens last 5 minutes (a token keeps working until it expires, even after logout); the refresh token rotates and its whole family is revoked on logout or reuse.
+
+Not built yet: password recovery and email verification.
 
 ## Player accounts
 

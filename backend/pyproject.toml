@@ -22,8 +22,10 @@ dependencies = [
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "mypy>=2.4.1",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
+    "pytest-cov>=7.1.0",
     "ruff>=0.17.5",
 ]
 
@@ -45,3 +47,13 @@ ignore = ["B008"]  # FastAPI Depends() in defaults
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]  # long literal payloads read better on one line
 "scripts/*" = ["E501"]  # demo-data tables read better on one line
+
+[tool.mypy]
+files = ["app"]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/main.py"]

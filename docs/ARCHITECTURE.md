@@ -1,4 +1,4 @@
-# Architecture (Phase 0)
+# Architecture
 
 ScoutSphere is a **modular monolith**: one FastAPI backend, one Next.js frontend, PostgreSQL as the
 source of truth, Redis for cache/queues. Decisions that override the original blueprint are in

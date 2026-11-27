@@ -8,3 +8,7 @@ node_modules/
 .ruff_cache/
 backend/media/
 demo-accounts.md
+
+# test coverage data
+.coverage
+htmlcov/

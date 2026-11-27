@@ -9,6 +9,7 @@ import { PlayerAvatar } from "@/components/players/player-avatar";
 import { Button, Card, Empty, ErrorText, Pagination } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { fetchAll } from "@/lib/fetch-all";
 import { ratingFilters } from "@/lib/schemas";
 import {
   FEET,
@@ -65,9 +66,7 @@ export default function SearchPage() {
   const shortlists = useQuery({
     queryKey: ["shortlists", activeOrgId, "mine-options"],
     queryFn: () =>
-      apiFetch<Page<ShortlistSummary>>(
-        "/recruitment/shortlists?scope=mine&page_size=100",
-      ),
+      fetchAll<ShortlistSummary>("/recruitment/shortlists?scope=mine"),
     enabled: !!activeOrgId && can("recruitment:manage"),
   });
 

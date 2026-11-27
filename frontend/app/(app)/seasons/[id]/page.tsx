@@ -8,7 +8,8 @@ import { useState } from "react";
 import { Button, Card, Empty, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
-import type { Club, Page, SeasonDetail } from "@/lib/types";
+import { fetchAll } from "@/lib/fetch-all";
+import type { Club, SeasonDetail } from "@/lib/types";
 
 export default function SeasonPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,8 +31,8 @@ export default function SeasonPage() {
     queryKey: ["club-options", activeOrgId],
     queryFn: async () => {
       const [mine, ref] = await Promise.all([
-        apiFetch<Page<Club>>("/clubs?scope=mine&page_size=100"),
-        apiFetch<Page<Club>>("/clubs?scope=reference&page_size=100"),
+        fetchAll<Club>("/clubs?scope=mine"),
+        fetchAll<Club>("/clubs?scope=reference"),
       ]);
       return [...mine.items, ...ref.items];
     },

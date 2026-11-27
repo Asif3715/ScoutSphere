@@ -53,10 +53,10 @@ async def upload_my_photo(
 ):
     data = await file.read(media.get_settings().photo_max_bytes + 1)
     crop = None
-    if crop_x is not None or crop_y is not None or crop_size is not None:
-        if None in (crop_x, crop_y, crop_size):
-            raise AppError(422, "invalid_crop", "Send crop_x, crop_y and crop_size together")
+    if crop_x is not None and crop_y is not None and crop_size is not None:
         crop = media.Crop(crop_x, crop_y, crop_size)
+    elif crop_x is not None or crop_y is not None or crop_size is not None:
+        raise AppError(422, "invalid_crop", "Send crop_x, crop_y and crop_size together")
     return await player_accounts.set_self_photo(db, user, data, crop)
 
 

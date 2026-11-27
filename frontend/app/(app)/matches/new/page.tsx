@@ -10,12 +10,12 @@ import { Field } from "@/components/auth/field";
 import { Button, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { fetchAll } from "@/lib/fetch-all";
 import { matchSchema, toIsoUtc, type MatchValues } from "@/lib/schemas";
 import type {
   Competition,
   CompetitionDetail,
   MatchDetail,
-  Page,
   SeasonDetail,
 } from "@/lib/types";
 
@@ -30,6 +30,7 @@ export default function NewMatchPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
+    setValue,
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
@@ -38,7 +39,7 @@ export default function NewMatchPage() {
 
   const comps = useQuery({
     queryKey: ["competitions", activeOrgId, "options"],
-    queryFn: () => apiFetch<Page<Competition>>("/competitions?page_size=100"),
+    queryFn: () => fetchAll<Competition>("/competitions"),
     enabled: !!activeOrgId,
   });
   const detail = useQuery({
@@ -97,7 +98,13 @@ export default function NewMatchPage() {
             id="competition"
             className={select}
             value={competitionId}
-            onChange={(e) => setCompetitionId(e.target.value)}
+            onChange={(e) => {
+              // a season (and its clubs) only make sense within one competition
+              setCompetitionId(e.target.value);
+              setValue("season_id", "");
+              setValue("home_club_id", "");
+              setValue("away_club_id", "");
+            }}
           >
             <option value="">Choose…</option>
             {comps.data?.items.map((c) => (
@@ -112,7 +119,16 @@ export default function NewMatchPage() {
           <label htmlFor="season_id" className="block text-sm font-medium">
             Season
           </label>
-          <select id="season_id" className={select} {...register("season_id")}>
+          <select
+            id="season_id"
+            className={select}
+            {...register("season_id", {
+              onChange: () => {
+                setValue("home_club_id", "");
+                setValue("away_club_id", "");
+              },
+            })}
+          >
             <option value="">Choose…</option>
             {detail.data?.seasons.map((s) => (
               <option key={s.id} value={s.id}>

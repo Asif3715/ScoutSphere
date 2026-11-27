@@ -13,6 +13,7 @@ import { CheckAllIcon, SettingsIcon } from "@/components/ui/icons";
 import { Button, ErrorText, Pagination } from "@/components/ui/ui";
 import { dayGroup } from "@/lib/format";
 import { apiFetch } from "@/lib/http";
+import { tabKeys } from "@/lib/tabs";
 import type { AppNotification, Page } from "@/lib/types";
 
 type Pref = { type: string; enabled: boolean };
@@ -161,6 +162,7 @@ export default function NotificationsPage() {
           <div className="table-toolbar items-center! py-2!">
             <div
               role="tablist"
+              onKeyDown={tabKeys}
               aria-label="Filter"
               className="flex rounded-[2px] border border-line-strong p-0.5"
             >
@@ -172,6 +174,7 @@ export default function NotificationsPage() {
                   key={t.text}
                   role="tab"
                   aria-selected={unreadOnly === t.key}
+                  tabIndex={unreadOnly === t.key ? 0 : -1}
                   onClick={() => (setUnreadOnly(t.key), setPage(1))}
                   className={`eyebrow flex items-center gap-2 rounded-[1px] px-3 py-2 transition-colors ${
                     unreadOnly === t.key

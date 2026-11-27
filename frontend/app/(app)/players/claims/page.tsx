@@ -11,6 +11,7 @@ import { Button, Card, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { timeAgo } from "@/lib/format";
 import { ApiError, apiFetch } from "@/lib/http";
+import { tabKeys } from "@/lib/tabs";
 import type { OrgClaim } from "@/lib/types";
 
 const TONE = {
@@ -167,6 +168,7 @@ export default function ClaimsPage() {
       />
       <div
         role="tablist"
+        onKeyDown={tabKeys}
         aria-label="Which requests"
         className="flex w-fit rounded-[2px] border border-line-strong p-0.5"
       >
@@ -180,6 +182,7 @@ export default function ClaimsPage() {
             key={k}
             role="tab"
             aria-selected={tab === k}
+            tabIndex={tab === k ? 0 : -1}
             onClick={() => setTab(k)}
             className={`eyebrow rounded-[1px] px-3 py-2 transition-colors ${
               tab === k
