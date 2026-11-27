@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
+from app.db.lookup import get_required
 from app.domain.football import POSITION_GROUPS, POSITION_TO_GROUP, age_on, is_minor
 from app.models.club import Club
 from app.models.player import Player, PlayerCareer
@@ -385,7 +386,7 @@ async def release_from_squad(
     team = await _team(db, ctx, team_id)
     tp = await _active_member(db, ctx, team, membership_id)
     await _leave(db, tp)
-    released = await db.get(Player, tp.player_id)
+    released = await get_required(db, Player, tp.player_id)
     await _tell_player(db, released, team, "left")
     await record_audit(
         db, action="squad.release", outcome="success", actor_user_id=ctx.user_id,
@@ -408,7 +409,7 @@ async def transfer_squad_member(
     team = await _team(db, ctx, team_id)
     target = await _team(db, ctx, to_team_id)
     tp = await _active_member(db, ctx, team, membership_id)
-    player = await db.get(Player, tp.player_id)
+    player = await get_required(db, Player, tp.player_id)
     position = tp.position
     await _leave(db, tp)
     await _register(db, ctx, target, player, squad_number, position, _today())

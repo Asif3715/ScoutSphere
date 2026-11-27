@@ -58,12 +58,16 @@ def process_photo(data: bytes, crop: Crop | None) -> tuple[bytes, bytes]:
             probe.verify()  # structural check before decoding pixels
         if fmt not in ALLOWED_FORMATS:
             raise _bad("unsupported_photo_type", "Use a JPEG, PNG or WebP image")
-        with Image.open(io.BytesIO(data)) as img:
-            img.load()
-            img = ImageOps.exif_transpose(img)
-            if getattr(img, "n_frames", 1) > 1:
-                img.seek(0)  # animated WebP/PNG: keep the first frame only
-            img = img.convert("RGBA") if img.mode in ("P", "LA", "RGBA") else img.convert("RGB")
+        with Image.open(io.BytesIO(data)) as opened:
+            opened.load()
+            if getattr(opened, "n_frames", 1) > 1:
+                opened.seek(0)  # animated WebP/PNG: keep the first frame only
+            upright: Image.Image = ImageOps.exif_transpose(opened)
+            img = (
+                upright.convert("RGBA")
+                if upright.mode in ("P", "LA", "RGBA")
+                else upright.convert("RGB")
+            )
     except AppError:
         raise
     except (Image.DecompressionBombError, Image.DecompressionBombWarning):

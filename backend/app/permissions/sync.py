@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.rbac import Permission, Role, RolePermission
@@ -6,7 +6,10 @@ from app.permissions.catalog import ALL_PERMISSIONS, ROLES
 
 
 async def sync_rbac(db: AsyncSession) -> None:
-    """Idempotently mirror the code catalog into the roles/permissions tables."""
+    """Idempotently mirror the code catalog into the roles/permissions tables. A transaction
+    advisory lock makes several app instances starting at once take turns, instead of racing
+    to insert the same rows."""
+    await db.execute(text("SELECT pg_advisory_xact_lock(hashtext('scoutsphere.sync_rbac'))"))
     existing_perms = {p.key: p for p in (await db.scalars(select(Permission))).all()}
     for key in ALL_PERMISSIONS:
         if key not in existing_perms:

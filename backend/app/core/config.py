@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # The repository-root .env is read whether the app runs from the root (Docker, tests via
+    # env vars) or from backend/; a backend/.env, if present, overrides it.
+    model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 
     app_name: str = "ScoutSphere"
     environment: str = "local"  # local | test | staging | production
@@ -22,16 +24,25 @@ class Settings(BaseSettings):
     # Auth. jwt_secret MUST be overridden outside local/test (enforced in security.py).
     jwt_secret: str = "dev-only-insecure-secret-change-me"
     jwt_algorithm: str = "HS256"
-    access_token_minutes: int = 15
+    # Short-lived: a token keeps working until it expires, even after logout.
+    access_token_minutes: int = 5
     refresh_token_days: int = 14
     refresh_cookie_name: str = "refresh_token"
     cookie_secure: bool = False  # True behind HTTPS in staging/production
+
+    # Sign-in throttling (counted in Redis). Failures per email address and per IP address
+    # within the window; reaching the limit blocks further attempts until the window ends.
+    login_window_minutes: int = 15
+    login_max_failures_per_account: int = 5
+    login_max_failures_per_ip: int = 30
 
     # Uploaded media (player photos). Local disk now; the storage layer is an interface so
     # object storage (S3 / MinIO) can replace it without touching callers.
     media_root: str = "media"
     photo_max_bytes: int = 5 * 1024 * 1024
-    media_url_hours: int = 24  # lifetime of signed photo URLs (rounded to stay cacheable)
+    # Signed photo URLs live 1 to 2 of these windows (rounded so a URL stays cacheable).
+    # A leaked link stops working within hours, not days.
+    media_url_hours: int = 2
 
     @property
     def sync_database_url(self) -> str:

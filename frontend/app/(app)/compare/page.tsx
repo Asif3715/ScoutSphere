@@ -9,10 +9,10 @@ import { PlayerAvatar } from "@/components/players/player-avatar";
 import { Card, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/http";
+import { fetchAll } from "@/lib/fetch-all";
 import {
   label,
   type CompareResult,
-  type Page,
   type RequirementSummary,
 } from "@/lib/types";
 
@@ -20,11 +20,18 @@ function dash(v: string | number | null | undefined) {
   return v == null || v === "" ? "—" : String(v);
 }
 
+const MAX_COMPARE = 5;
+
 function Compare() {
   const { activeOrgId } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
-  const ids = (params.get("ids") ?? "").split(",").filter(Boolean);
+  // The URL can say anything: keep at most MAX_COMPARE distinct ids.
+  const requested = [
+    ...new Set((params.get("ids") ?? "").split(",").filter(Boolean)),
+  ];
+  const ids = requested.slice(0, MAX_COMPARE);
+  const trimmed = requested.length > ids.length;
   const requirementId = params.get("requirement_id") ?? "";
 
   const result = useQuery({
@@ -38,10 +45,7 @@ function Compare() {
   });
   const reqs = useQuery({
     queryKey: ["requirements", activeOrgId, "options"],
-    queryFn: () =>
-      apiFetch<Page<RequirementSummary>>(
-        "/recruitment/requirements?page_size=100",
-      ),
+    queryFn: () => fetchAll<RequirementSummary>("/recruitment/requirements"),
     enabled: !!activeOrgId,
   });
 
@@ -100,6 +104,12 @@ function Compare() {
 
   return (
     <div className="space-y-6">
+      {trimmed && (
+        <p role="status" className="text-sm text-warn">
+          You can compare up to {MAX_COMPARE} players at once, so only the first{" "}
+          {MAX_COMPARE} are shown.
+        </p>
+      )}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Compare players</h1>
         <label className="text-sm">

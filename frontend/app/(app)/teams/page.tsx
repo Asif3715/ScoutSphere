@@ -16,14 +16,9 @@ import {
 import { Button, Card, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { fetchAll } from "@/lib/fetch-all";
 import { teamSchema, type TeamValues } from "@/lib/schemas";
-import {
-  label,
-  TEAM_TYPES,
-  type Club,
-  type Page,
-  type Team,
-} from "@/lib/types";
+import { label, TEAM_TYPES, type Club, type Team } from "@/lib/types";
 
 const select =
   "w-full rounded-[2px] border border-line-strong bg-transparent px-3 py-2 text-sm";
@@ -41,7 +36,7 @@ export default function TeamsPage() {
   });
   const clubs = useQuery({
     queryKey: ["clubs", activeOrgId, "options"],
-    queryFn: () => apiFetch<Page<Club>>("/clubs?scope=mine&page_size=100"),
+    queryFn: () => fetchAll<Club>("/clubs?scope=mine"),
     enabled: !!activeOrgId && manage,
   });
   const {

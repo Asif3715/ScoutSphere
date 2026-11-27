@@ -202,3 +202,90 @@ async def test_refresh_token_stored_hashed_only(client):
         sess = await db.scalar(select(UserSession))
         assert raw.split(".", 1)[1] not in sess.refresh_token_hash
         assert len(sess.refresh_token_hash) == 64
+
+
+# ---- sign-in throttling -------------------------------------------------------------------
+async def _attempt(client, email, password="wrong-password-1"):
+    return await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+
+
+def _from_ip(ip):
+    """A client whose requests arrive from `ip` (the app trusts the socket, not headers)."""
+    from httpx import ASGITransport, AsyncClient
+
+    from app.main import app
+
+    return AsyncClient(transport=ASGITransport(app=app, client=(ip, 4321)), base_url="http://test")
+
+
+async def test_repeated_wrong_passwords_lock_the_account_for_a_while(client):
+    await make_user("lock@example.com")
+    for _ in range(5):
+        assert (await _attempt(client, "lock@example.com")).status_code == 401
+    r = await _attempt(client, "lock@example.com", PASSWORD)  # even the right password waits
+    assert r.status_code == 429 and r.json()["error"]["code"] == "too_many_attempts"
+    assert int(r.headers["retry-after"]) > 0
+    assert "Try again in" in r.json()["error"]["message"]
+
+
+async def test_unknown_emails_are_throttled_the_same_way(client):
+    for _ in range(5):
+        assert (await _attempt(client, "nobody@example.com")).status_code == 401
+    assert (await _attempt(client, "nobody@example.com")).status_code == 429
+
+
+async def test_email_case_does_not_bypass_the_lock(client):
+    await make_user("case@example.com")
+    for _ in range(5):
+        await _attempt(client, "case@example.com")
+    assert (await _attempt(client, "CASE@Example.com")).status_code == 429
+
+
+async def test_a_successful_sign_in_resets_the_count(client):
+    await make_user("reset@example.com")
+    for _ in range(4):
+        await _attempt(client, "reset@example.com")
+    assert (await _attempt(client, "reset@example.com", PASSWORD)).status_code == 200
+    for _ in range(4):
+        assert (await _attempt(client, "reset@example.com")).status_code == 401
+
+
+async def test_one_ip_guessing_many_accounts_is_blocked(client):
+    async with _from_ip("198.51.100.9") as attacker, _from_ip("198.51.100.10") as other:
+        for i in range(30):
+            await _attempt(attacker, f"spray{i}@example.com")
+        assert (await _attempt(attacker, "fresh@example.com")).status_code == 429
+        # someone else on another address is unaffected
+        assert (await _attempt(other, "fresh@example.com")).status_code == 401
+
+
+async def test_forwarded_headers_cannot_dodge_the_ip_limit(client):
+    async with _from_ip("198.51.100.20") as attacker:
+        for i in range(30):
+            await attacker.post(
+                "/api/v1/auth/login",
+                json={"email": f"x{i}@example.com", "password": "wrong-password-1"},
+                headers={"X-Forwarded-For": f"10.0.0.{i}"},
+            )
+        assert (await _attempt(attacker, "y@example.com")).status_code == 429
+
+
+async def test_sign_in_still_works_when_redis_is_down(client, monkeypatch):
+    from redis.exceptions import ConnectionError as RedisConnectionError
+
+    from app.services import login_throttle
+
+    class Broken:
+        async def get(self, *a):
+            raise RedisConnectionError("down")
+
+        def pipeline(self, *a, **k):
+            raise RedisConnectionError("down")
+
+        async def delete(self, *a):
+            raise RedisConnectionError("down")
+
+    monkeypatch.setattr(login_throttle, "_redis", lambda: Broken())
+    await make_user("redisdown@example.com")
+    assert (await _attempt(client, "redisdown@example.com")).status_code == 401
+    assert (await _attempt(client, "redisdown@example.com", PASSWORD)).status_code == 200

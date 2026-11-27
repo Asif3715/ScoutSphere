@@ -14,6 +14,7 @@ import { PlayerForm } from "@/components/players/player-form";
 import { Button, Card, Empty, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { fetchAll } from "@/lib/fetch-all";
 import {
   careerSchema,
   mediaSchema,
@@ -27,7 +28,6 @@ import {
   type Career,
   type Club,
   type Media,
-  type Page,
   type Player,
 } from "@/lib/types";
 
@@ -280,8 +280,8 @@ function CareerSection({
     queryKey: ["club-options", activeOrgId],
     queryFn: async () => {
       const [mine, ref] = await Promise.all([
-        apiFetch<Page<Club>>("/clubs?scope=mine&page_size=100"),
-        apiFetch<Page<Club>>("/clubs?scope=reference&page_size=100"),
+        fetchAll<Club>("/clubs?scope=mine"),
+        fetchAll<Club>("/clubs?scope=reference"),
       ]);
       return [...mine.items, ...ref.items];
     },

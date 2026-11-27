@@ -319,18 +319,22 @@ async def _assignable_scout(
 async def _check_target(
     db: AsyncSession, ctx: AuthContext, target_type: str, target_id: uuid.UUID
 ) -> dict:
+    ok: bool
     if target_type == "match":
-        ok = await db.scalar(
-            select(Match.id).where(
-                Match.id == target_id, visible(Match.organization_id, ctx.organization_id)
+        ok = (
+            await db.scalar(
+                select(Match.id).where(
+                    Match.id == target_id, visible(Match.organization_id, ctx.organization_id)
+                )
             )
-        )
+        ) is not None
         key = "match_id"
     elif target_type == "competition":
         try:
-            ok = (await get_visible_competition(db, ctx, target_id)).id
+            await get_visible_competition(db, ctx, target_id)
+            ok = True
         except AppError:
-            ok = None
+            ok = False
         key = "competition_id"
     else:
         ok = (await PlayerRepository(db, ctx).get_visible(target_id)) is not None

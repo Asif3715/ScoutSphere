@@ -8,7 +8,8 @@
 - Write tests with each module: unit, API, permission and tenant-isolation tests.
 - Backend: `ruff` (lint + format), `pytest`. Frontend: `eslint`, `tsc`, `vitest`, `prettier`.
 - Update `docs/` whenever architecture, APIs or the schema change.
-- Phase 0 pending docs: `DATABASE_SCHEMA.md` and `RBAC.md` (designed before Phase 1 begins).
+- Reference docs: `ARCHITECTURE.md`, `API_CONVENTIONS.md`, `DATABASE_SCHEMA.md`, `RBAC.md`,
+  and `KNOWN_ISSUES.md` for what is deliberately not done yet.
 
 ## Demo data
 

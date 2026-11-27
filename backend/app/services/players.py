@@ -30,7 +30,8 @@ def _club(clubs: dict, pid: uuid.UUID) -> CurrentClub | None:
     return CurrentClub(club_id=clubs[pid][0], club_name=clubs[pid][1]) if pid in clubs else None
 
 
-def _photo(p: Player, *, thumb: bool) -> str | None:
+def photo_path(p: Player, *, thumb: bool) -> str | None:
+    """Signed path of the uploaded photo (or thumbnail), else the external link."""
     if p.photo_key:
         return media.signed_path(media.thumb_key(p.photo_key) if thumb else p.photo_key)
     return p.profile_picture_url
@@ -43,7 +44,7 @@ def _photo_hidden(p: Player, ctx: AuthContext) -> bool:
 
 def photo_thumb(p: Player, ctx: AuthContext) -> str | None:
     """Thumbnail path for list views, honouring minor protection."""
-    return None if _photo_hidden(p, ctx) else _photo(p, thumb=True)
+    return None if _photo_hidden(p, ctx) else photo_path(p, thumb=True)
 
 
 def build_out(p: Player, ctx: AuthContext, clubs: dict, secondaries: dict) -> PlayerOut:
@@ -59,8 +60,8 @@ def build_out(p: Player, ctx: AuthContext, clubs: dict, secondaries: dict) -> Pl
         primary_position=p.primary_position, secondary_positions=secondaries.get(p.id, []),
         biography=None if hide else p.biography,
         profile_picture_url=None if hide else p.profile_picture_url,
-        photo_url=None if hide else _photo(p, thumb=False),
-        photo_thumb_url=None if hide else _photo(p, thumb=True),
+        photo_url=None if hide else photo_path(p, thumb=False),
+        photo_thumb_url=None if hide else photo_path(p, thumb=True),
         has_uploaded_photo=p.photo_key is not None and not hide,
         visibility=p.visibility,
         is_owner=owner, current_club=_club(clubs, p.id), created_at=p.created_at,

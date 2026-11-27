@@ -10,6 +10,7 @@ import { Field } from "@/components/auth/field";
 import { Button, ErrorText } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { ApiError, apiFetch } from "@/lib/http";
+import { fetchAll } from "@/lib/fetch-all";
 import {
   assignmentPayload,
   assignmentSchema,
@@ -47,18 +48,17 @@ export default function NewAssignmentPage() {
 
   const scouts = useQuery({
     queryKey: ["scouts", activeOrgId, "options"],
-    queryFn: () => apiFetch<Page<Scout>>("/scouts?page_size=100"),
+    queryFn: () => fetchAll<Scout>("/scouts"),
     enabled: !!activeOrgId,
   });
   const matches = useQuery({
     queryKey: ["matches", activeOrgId, "options"],
-    queryFn: () =>
-      apiFetch<Page<MatchSummary>>("/matches?page_size=100&sort=kickoff_asc"),
+    queryFn: () => fetchAll<MatchSummary>("/matches?sort=kickoff_asc"),
     enabled: !!activeOrgId && targetType === "match",
   });
   const comps = useQuery({
     queryKey: ["competitions", activeOrgId, "options"],
-    queryFn: () => apiFetch<Page<Competition>>("/competitions?page_size=100"),
+    queryFn: () => fetchAll<Competition>("/competitions"),
     enabled: !!activeOrgId && targetType === "competition",
   });
   const players = useQuery({

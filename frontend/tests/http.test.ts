@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  SESSION_EXPIRED,
   apiFetch,
   ApiError,
   getAccessToken,
@@ -90,5 +91,40 @@ describe("apiFetch", () => {
     await expect(
       apiFetch("/auth/logout", { method: "POST" }),
     ).resolves.toBeUndefined();
+  });
+
+  it("announces a lost session when the refresh fails", async () => {
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(
+        json(401, { error: { code: "invalid_token", message: "expired" } }),
+      )
+      .mockResolvedValueOnce(
+        json(401, { error: { code: "invalid_refresh_token", message: "x" } }),
+      );
+    vi.stubGlobal("fetch", f);
+    const heard = vi.fn();
+    const win = new EventTarget(); // tests run in Node: stand in for window
+    vi.stubGlobal("window", win);
+    win.addEventListener(SESSION_EXPIRED, heard);
+    await expect(apiFetch("/thing")).rejects.toBeInstanceOf(ApiError);
+    expect(heard).toHaveBeenCalledTimes(1);
+    expect(getAccessToken()).toBeNull();
+  });
+
+  it("stays quiet for requests made without a session", async () => {
+    setAccessToken(null);
+    const f = vi
+      .fn()
+      .mockResolvedValue(
+        json(401, { error: { code: "not_authenticated", message: "x" } }),
+      );
+    vi.stubGlobal("fetch", f);
+    const heard = vi.fn();
+    const win = new EventTarget(); // tests run in Node: stand in for window
+    vi.stubGlobal("window", win);
+    win.addEventListener(SESSION_EXPIRED, heard);
+    await expect(apiFetch("/thing")).rejects.toBeInstanceOf(ApiError);
+    expect(heard).not.toHaveBeenCalled();
   });
 });

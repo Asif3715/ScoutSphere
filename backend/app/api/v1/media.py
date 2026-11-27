@@ -16,12 +16,13 @@ async def get_media(key: str, exp: int = Query(...), sig: str = Query(..., max_l
     path = media.storage().path(key) if media.verify(key, exp, sig) else None
     if path is None:
         return JSONResponse(_NOT_FOUND, status_code=404)
+    max_age = media.get_settings().media_url_hours * 3600
     return FileResponse(
         path,
         media_type="image/webp",
         headers={
             # private: per-user signed URL; safe to keep until the signature expires
-            "Cache-Control": "private, max-age=86400, immutable",
+            "Cache-Control": f"private, max-age={max_age}, immutable",
             "Content-Disposition": "inline",
             "Cross-Origin-Resource-Policy": "cross-origin",
         },

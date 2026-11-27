@@ -15,6 +15,7 @@ import {
 import { Pagination } from "@/components/ui/ui";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/http";
+import { tabKeys } from "@/lib/tabs";
 import { initials } from "@/lib/media";
 import type { Club, Page } from "@/lib/types";
 
@@ -57,6 +58,7 @@ export default function ClubsPage() {
           <>
             <div
               role="tablist"
+              onKeyDown={tabKeys}
               aria-label="Which clubs"
               className="flex rounded-[2px] border border-line-strong p-0.5"
             >
@@ -65,6 +67,7 @@ export default function ClubsPage() {
                   key={s}
                   role="tab"
                   aria-selected={scope === s}
+                  tabIndex={scope === s ? 0 : -1}
                   onClick={() => (setScope(s), setPage(1))}
                   className={`eyebrow rounded-[1px] px-3 py-2 transition-colors ${
                     scope === s

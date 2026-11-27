@@ -5,6 +5,8 @@ import uuid
 # Must be set before any `app` import so settings/engine bind to the test database.
 TEST_DB = "scoutsphere_test"
 os.environ["ENVIRONMENT"] = "test"
+# A separate Redis database, so tests never touch the development stack's counters.
+os.environ["REDIS_URL"] = "redis://localhost:6380/15"
 os.environ["DATABASE_URL"] = (
     f"postgresql+asyncpg://scoutsphere:scoutsphere@localhost:5433/{TEST_DB}"
 )
@@ -100,6 +102,11 @@ def _clean_tables():
     conn.autocommit = True
     conn.cursor().execute("TRUNCATE " + ", ".join(TABLES_TO_CLEAN) + " CASCADE")
     conn.close()
+    import redis
+
+    r = redis.Redis.from_url(os.environ["REDIS_URL"])
+    r.flushdb()  # database 15 is reserved for tests
+    r.close()
 
 
 @pytest.fixture

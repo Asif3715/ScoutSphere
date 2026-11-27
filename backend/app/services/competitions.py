@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -296,9 +296,7 @@ async def delete_season(db: AsyncSession, ctx: AuthContext, season_id: uuid.UUID
     if await db.scalar(select(func.count(Match.id)).where(Match.season_id == season.id)):
         raise AppError(409, "season_has_matches", "Remove the season's matches first")
     await db.execute(
-        CompetitionParticipant.__table__.delete().where(
-            CompetitionParticipant.season_id == season.id
-        )
+        delete(CompetitionParticipant).where(CompetitionParticipant.season_id == season.id)
     )
     await db.delete(season)
     await record_audit(

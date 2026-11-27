@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import ColumnElement, exists, func, or_, select
+from sqlalchemy import ColumnElement, exists, false, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -122,7 +122,8 @@ async def _summaries(
     return [
         ShortlistSummary(
             id=s.id, name=s.name, description=s.description, priority=s.priority,
-            requirement_id=s.requirement_id, requirement_title=titles.get(s.requirement_id),
+            requirement_id=s.requirement_id,
+            requirement_title=titles.get(s.requirement_id) if s.requirement_id else None,
             player_count=counts.get(s.id, 0), is_owner=s.created_by_user_id == ctx.user_id,
             owner_name=owners.get(s.created_by_user_id), created_at=s.created_at,
         )
@@ -371,7 +372,7 @@ async def set_shares(
                 .where(
                     OrganizationMember.organization_id == s.organization_id,
                     OrganizationMember.status == "active",
-                    OrganizationMember.user_id.in_(wanted) if wanted else False,
+                    OrganizationMember.user_id.in_(wanted) if wanted else false(),
                     Role.key.in_(eligible_roles),
                 )
             )

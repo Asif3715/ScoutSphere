@@ -8,7 +8,7 @@ from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import RequestGuardMiddleware, SecurityHeadersMiddleware
-from app.core.security import assert_secure_config
+from app.core.security import DEV_ENVIRONMENTS, assert_secure_config
 from app.db.session import SessionLocal
 from app.permissions.sync import sync_rbac
 
@@ -31,13 +31,15 @@ def create_app() -> FastAPI:
         openapi_url="/api/v1/openapi.json",
     )
     app.add_middleware(RequestGuardMiddleware)
-    app.add_middleware(SecurityHeadersMiddleware, hsts=settings.cookie_secure)
+    # HSTS everywhere except a developer machine (which has no HTTPS).
+    app.add_middleware(SecurityHeadersMiddleware, hsts=settings.environment not in DEV_ENVIRONMENTS)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type", "X-Organization-Id"],
+        expose_headers=["Retry-After"],
     )
     register_error_handlers(app)
     app.include_router(api_router)

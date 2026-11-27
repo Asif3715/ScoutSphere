@@ -1,7 +1,8 @@
 import uuid
 from datetime import UTC, datetime
+from typing import cast
 
-from sqlalchemy import func, select, update
+from sqlalchemy import CursorResult, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
@@ -94,7 +95,7 @@ async def mark_all_read(db: AsyncSession, user_id: uuid.UUID) -> int:
         .values(read_at=datetime.now(UTC))
     )
     await db.commit()
-    return result.rowcount or 0
+    return cast(CursorResult, result).rowcount or 0
 
 
 async def get_preferences(db: AsyncSession, user_id: uuid.UUID) -> list[PreferenceOut]:

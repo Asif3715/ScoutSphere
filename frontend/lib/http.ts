@@ -78,6 +78,9 @@ export function refreshSession(): Promise<TokenResponse | null> {
   return refreshInFlight;
 }
 
+/** Fired when the session ends under us (refresh failed): the auth provider signs out. */
+export const SESSION_EXPIRED = "scoutsphere:session-expired";
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit & { json?: unknown; auth?: boolean } = {},
@@ -98,10 +101,13 @@ export async function apiFetch<T>(
     });
   };
 
+  const hadSession = auth && accessToken !== null;
   let res = await send();
   if (res.status === 401 && auth) {
     // Access token expired: try one silent refresh, then replay the request once.
     if (await refreshSession()) res = await send();
+    else if (hadSession && typeof window !== "undefined")
+      window.dispatchEvent(new Event(SESSION_EXPIRED));
   }
   if (!res.ok) throw await parseError(res);
   return res.status === 204 ? (undefined as T) : res.json();

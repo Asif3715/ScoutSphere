@@ -18,7 +18,19 @@ docker compose up --build
 | Readiness (Postgres + Redis) | http://localhost:8000/api/v1/health/ready |
 
 Host ports for Postgres (5433) and Redis (6380) are offset so they do not clash with local installs.
-The backend container runs `alembic upgrade head` on start.
+The backend container runs `alembic upgrade head` on start. The single `.env` at the repository root
+is used by Docker and by the backend when run from `backend/`.
+
+## Production images
+
+```bash
+docker build --target prod --build-arg NEXT_PUBLIC_API_URL=https://api.your-domain frontend
+docker build backend
+```
+
+The frontend `prod` target runs `next build` and serves with `next start` as a non-root user
+(`docker compose` uses the `dev` target). The backend refuses to start with development settings
+when `ENVIRONMENT` is `staging` or `production`; see `.env.example` for what it checks.
 
 ## Working without Docker for app code
 
@@ -31,7 +43,7 @@ cd frontend && pnpm install && pnpm dev
 ## Checks
 
 ```bash
-cd backend  && uv run ruff check . && uv run ruff format --check . && uv run pytest
+cd backend  && uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest
 cd frontend && pnpm lint && pnpm typecheck && pnpm test
 ```
 

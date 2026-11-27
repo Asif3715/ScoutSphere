@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
+from app.db.lookup import get_required
 from app.domain.football import age_on
 from app.domain.recruitment import (
     DEFAULT_STAGE,
@@ -563,7 +564,8 @@ async def _candidate_out(
             player_id=c.player_id, player_name=players[c.player_id].full_name,
             age=age_on(players[c.player_id].date_of_birth),
             primary_position=players[c.player_id].primary_position, stage=c.stage, notes=c.notes,
-            assignment_id=c.assignment_id, assignment_status=statuses.get(c.assignment_id),
+            assignment_id=c.assignment_id,
+            assignment_status=statuses.get(c.assignment_id) if c.assignment_id else None,
             created_at=c.created_at, updated_at=c.updated_at,
             photo_thumb_url=photo_thumb(players[c.player_id], ctx),
         )
@@ -823,13 +825,13 @@ async def assign_scout(
     ctx.require(catalog.RECRUITMENT_MANAGE)
     ctx.require(catalog.ASSIGNMENTS_MANAGE)
     c = await _load_candidate(db, ctx, candidate_id, lock=True)
-    req = await db.get(RecruitmentRequirement, c.requirement_id)
+    req = await get_required(db, RecruitmentRequirement, c.requirement_id)
     _open_requirement(req)
     if c.stage in ("rejected", "archived", "signed"):
         raise AppError(
             409, "invalid_transition", f"A candidate at '{c.stage}' cannot be assigned a scout"
         )
-    player = await db.get(Player, c.player_id)
+    player = await get_required(db, Player, c.player_id)
     created = await assignment_service.create_assignment(
         db, ctx,
         AssignmentCreate(
